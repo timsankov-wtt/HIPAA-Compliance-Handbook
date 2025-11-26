@@ -1,0 +1,120 @@
+# Jekyll Configuration for HIPAA Handbook
+
+# Site settings
+title: HIPAA Compliance Handbook
+description: A practical guide for building HIPAA-compliant applications with NestJS, PostgreSQL, Next.js/React, and AWS
+baseurl: "/hipaa-handbook"
+url: "https://your-username.github.io"
+
+# Theme
+theme: minima
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Kramdown settings
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-relative-links
+
+# Jekyll Relative Links
+relative_links:
+  enabled: true
+  collections: false
+
+# Collections (optional for better organization)
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:path/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "docs"
+    values:
+      layout: "default"
+  - scope:
+      path: "docs"
+    values:
+      layout: "default"
+
+# Navigation (for themes that support it)
+navigation:
+  - title: Home
+    url: /
+  - title: Fundamentals
+    url: /docs/01-fundamentals/
+  - title: Getting Started
+    url: /docs/02-getting-started/
+  - title: Backend
+    url: /docs/03-backend-playbook/
+  - title: Frontend
+    url: /docs/04-frontend-playbook/
+  - title: DevOps
+    url: /docs/05-devops-playbook/
+  - title: Appendices
+    url: /docs/06-appendices/
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .sass-cache
+  - .jekyll-cache
+  - .git
+  - .github
+  - README.md
+  - IMPLEMENTATION_PLAN.md
+  - GITHUB_PAGES_SETUP.md
+
+# Include
+include:
+  - _pages
+
+# Encoding
+encoding: utf-8
+
+# Timezone
+timezone: America/New_York
+
+# Permalink style
+permalink: pretty
+
+# Pagination (if needed)
+# paginate: 10
+# paginate_path: "/page:num/"
+
+# Search (if supported by theme)
+search_enabled: true
+search:
+  heading_level: 2
+  previews: 3
+  preview_words_before: 5
+  preview_words_after: 10
+  tokenizer_separator: /[\s/]+/
+  rel_url: true
+  button: false
+
+# Footer
+footer_content: "HIPAA Compliance Handbook | Internal Documentation | Last Updated: November 2025"
+
+# Analytics (optional - uncomment if needed)
+# google_analytics: UA-XXXXXXXX-X
+
+# Social links (optional)
+# github_username: your-org
+# linkedin_username: your-company
