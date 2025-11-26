@@ -1,3 +1,10 @@
+---
+layout: default
+title: HIPAA Compliance Framework
+parent: HIPAA Fundamentals
+nav_order: 4
+---
+
 # HIPAA Compliance Framework
 
 > A structured approach to understanding and implementing HIPAA requirements

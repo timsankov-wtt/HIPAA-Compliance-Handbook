@@ -1,3 +1,10 @@
+---
+layout: default
+title: Frontend Compliance Checklist
+parent: Frontend Playbook
+nav_order: 5
+---
+
 # Frontend Compliance Checklist
 
 > Use this checklist before releasing any frontend that can display or submit PHI.
@@ -158,14 +165,14 @@ This checklist is organized into:
 
 Use this section to document final approval before go‑live.
 
-- **Frontend Lead:** ********\_\_\_\_********  
-  **Date:** ********\_\_\_\_********
+- **Frontend Lead:** **\*\*\*\***\_\_\_\_**\*\*\*\***  
+  **Date:** **\*\*\*\***\_\_\_\_**\*\*\*\***
 
-- **Security/Privacy Officer:** ********\_\_\_\_********  
-  **Date:** ********\_\_\_\_********
+- **Security/Privacy Officer:** **\*\*\*\***\_\_\_\_**\*\*\*\***  
+  **Date:** **\*\*\*\***\_\_\_\_**\*\*\*\***
 
-- **QA Lead:** ********\_\_\_\_********  
-  **Date:** ********\_\_\_\_********
+- **QA Lead:** **\*\*\*\***\_\_\_\_**\*\*\*\***  
+  **Date:** **\*\*\*\***\_\_\_\_**\*\*\*\***
 
 Notes / Known Deviations:
 

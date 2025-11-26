@@ -1,3 +1,10 @@
+---
+layout: default
+title: Encryption
+parent: Backend Playbook
+nav_order: 3
+---
+
 # Encryption
 
 > Protecting ePHI at rest and in transit with encryption
@@ -20,6 +27,7 @@ Encryption is a **mandatory technical safeguard** under the 2025 HIPAA Security 
 **2025 Status:** **REQUIRED** (previously addressable)
 
 **Scope:**
+
 - All ePHI must be encrypted at rest
 - All ePHI must be encrypted in transit
 - Encryption keys must be properly managed
@@ -30,6 +38,7 @@ Encryption is a **mandatory technical safeguard** under the 2025 HIPAA Security 
 **Required:** Technical security measures to guard against unauthorized access to ePHI transmitted over electronic networks.
 
 **Includes:**
+
 - Encryption of data in transit
 - Secure communication channels (TLS/HTTPS)
 - End-to-end encryption where applicable
@@ -41,21 +50,25 @@ Encryption is a **mandatory technical safeguard** under the 2025 HIPAA Security 
 The 2025 HIPAA updates specify exact encryption standards:
 
 ### Data at Rest
+
 - **Standard:** AES-256 (Advanced Encryption Standard)
 - **Minimum:** AES-256 is the baseline requirement
 - **Certification:** FIPS 140-2 Level 2 minimum (Level 3 recommended for high-risk)
 
 ### Data in Transit
+
 - **Standard:** TLS 1.3 (Transport Layer Security)
 - **Minimum:** TLS 1.2 or higher
 - **No longer acceptable:** TLS 1.0, TLS 1.1, SSL (all deprecated)
 
 ### Key Exchanges
+
 - **Standard:** RSA-4096 or ECC (Elliptic Curve Cryptography)
 - **Minimum:** RSA-2048
 - **Not acceptable:** RSA-1024 or weaker
 
 ### Compliance Deadline
+
 **December 31, 2025** - All healthcare organizations must comply with new encryption standards
 
 ---
@@ -73,9 +86,9 @@ The 2025 HIPAA updates specify exact encryption standards:
  * RDS configuration with encryption enabled
  * Note: Must be enabled at DB instance creation - cannot be added later!
  */
-const dbInstance = new rds.DatabaseInstance(stack, 'Database', {
+const dbInstance = new rds.DatabaseInstance(stack, "Database", {
   engine: rds.DatabaseInstanceEngine.postgres({
-    version: rds.PostgresEngineVersion.VER_15_3
+    version: rds.PostgresEngineVersion.VER_15_3,
   }),
   instanceType: ec2.InstanceType.of(
     ec2.InstanceClass.T3,
@@ -83,11 +96,11 @@ const dbInstance = new rds.DatabaseInstance(stack, 'Database', {
   ),
 
   // HIPAA Requirement: Encryption at rest
-  storageEncrypted: true,  // REQUIRED for HIPAA
-  storageEncryptionKey: kmsKey,  // Customer-managed KMS key
+  storageEncrypted: true, // REQUIRED for HIPAA
+  storageEncryptionKey: kmsKey, // Customer-managed KMS key
 
   // SSL/TLS required for connections
-  enableIamDatabaseAuthentication: false,  // Use username/password with SSL
+  enableIamDatabaseAuthentication: false, // Use username/password with SSL
 
   // Backup encryption (inherits from instance)
   backupRetention: cdk.Duration.days(30),
@@ -95,8 +108,8 @@ const dbInstance = new rds.DatabaseInstance(stack, 'Database', {
   // Network isolation
   vpc: vpc,
   vpcSubnets: {
-    subnetType: ec2.SubnetType.PRIVATE_ISOLATED  // No internet access
-  }
+    subnetType: ec2.SubnetType.PRIVATE_ISOLATED, // No internet access
+  },
 });
 ```
 
@@ -108,6 +121,7 @@ const dbInstance = new rds.DatabaseInstance(stack, 'Database', {
 ✅ **FIPS 140-2 Level 2** - Compliant encryption modules
 
 **Important Limitations:**
+
 - ⚠️ **Cannot enable encryption on existing unencrypted DB** - Must create new encrypted instance and migrate
 - ⚠️ **Cannot change KMS key** after creation - Choose carefully
 - ⚠️ **Cannot disable encryption** once enabled
@@ -119,41 +133,37 @@ const dbInstance = new rds.DatabaseInstance(stack, 'Database', {
  * Create Customer Managed KMS Key for RDS encryption
  * Best practice: Separate key per database/environment
  */
-const rdsKmsKey = new kms.Key(stack, 'RDSEncryptionKey', {
-  description: 'KMS key for RDS database encryption (HIPAA)',
-  enableKeyRotation: true,  // REQUIRED: Automatic annual rotation
+const rdsKmsKey = new kms.Key(stack, "RDSEncryptionKey", {
+  description: "KMS key for RDS database encryption (HIPAA)",
+  enableKeyRotation: true, // REQUIRED: Automatic annual rotation
 
   // Key policy - least privilege access
   policy: new iam.PolicyDocument({
     statements: [
       // Allow root account to manage key
       new iam.PolicyStatement({
-        sid: 'Enable IAM User Permissions',
+        sid: "Enable IAM User Permissions",
         principals: [new iam.AccountRootPrincipal()],
-        actions: ['kms:*'],
-        resources: ['*']
+        actions: ["kms:*"],
+        resources: ["*"],
       }),
       // Allow RDS service to use key
       new iam.PolicyStatement({
-        sid: 'Allow RDS to use the key',
-        principals: [new iam.ServicePrincipal('rds.amazonaws.com')],
-        actions: [
-          'kms:Decrypt',
-          'kms:DescribeKey',
-          'kms:CreateGrant'
-        ],
-        resources: ['*']
-      })
-    ]
+        sid: "Allow RDS to use the key",
+        principals: [new iam.ServicePrincipal("rds.amazonaws.com")],
+        actions: ["kms:Decrypt", "kms:DescribeKey", "kms:CreateGrant"],
+        resources: ["*"],
+      }),
+    ],
   }),
 
   // Deletion protection
-  removalPolicy: cdk.RemovalPolicy.RETAIN,  // Prevent accidental deletion
-  pendingWindow: cdk.Duration.days(30)  // 30-day recovery window
+  removalPolicy: cdk.RemovalPolicy.RETAIN, // Prevent accidental deletion
+  pendingWindow: cdk.Duration.days(30), // 30-day recovery window
 });
 
 // Alias for easier identification
-rdsKmsKey.addAlias('alias/rds-database-hipaa');
+rdsKmsKey.addAlias("alias/rds-database-hipaa");
 ```
 
 #### PostgreSQL Force SSL Configuration
@@ -179,10 +189,12 @@ ssl_min_protocol_version = 'TLSv1.2'
  * Prisma example
  */
 // .env
-DATABASE_URL="postgresql://user:password@hostname:5432/dbname?sslmode=require"
+DATABASE_URL =
+  "postgresql://user:password@hostname:5432/dbname?sslmode=require";
 
 // For AWS RDS, download RDS CA certificate
-DATABASE_URL="postgresql://user:password@hostname:5432/dbname?sslmode=verify-full&sslrootcert=./rds-ca-2019-root.pem"
+DATABASE_URL =
+  "postgresql://user:password@hostname:5432/dbname?sslmode=verify-full&sslrootcert=./rds-ca-2019-root.pem";
 ```
 
 ```typescript
@@ -190,7 +202,7 @@ DATABASE_URL="postgresql://user:password@hostname:5432/dbname?sslmode=verify-ful
  * TypeORM connection with SSL
  */
 const dataSource = new DataSource({
-  type: 'postgres',
+  type: "postgres",
   host: process.env.DB_HOST,
   port: 5432,
   username: process.env.DB_USER,
@@ -199,9 +211,9 @@ const dataSource = new DataSource({
 
   // HIPAA REQUIRED: SSL/TLS encryption
   ssl: {
-    rejectUnauthorized: true,  // Verify server certificate
-    ca: fs.readFileSync('./rds-ca-2019-root.pem').toString()
-  }
+    rejectUnauthorized: true, // Verify server certificate
+    ca: fs.readFileSync("./rds-ca-2019-root.pem").toString(),
+  },
 });
 ```
 
@@ -216,12 +228,14 @@ For most HIPAA use cases, **AWS RDS encryption with KMS is sufficient**. Column-
 ### When AWS RDS Encryption Is Enough ✅
 
 **Use RDS/KMS encryption when:**
+
 - All database access is through your application
 - Database admins don't need to see raw data
 - You have proper access controls and audit logging
 - Data is in a HIPAA-eligible AWS service
 
 **Benefits:**
+
 - ✅ Transparent to application (no code changes)
 - ✅ Protects against physical theft of storage
 - ✅ Encrypts backups and snapshots automatically
@@ -231,12 +245,14 @@ For most HIPAA use cases, **AWS RDS encryption with KMS is sufficient**. Column-
 ### When Column-Level Encryption Is Needed ⚠️
 
 **Consider column-level encryption when:**
+
 - Database administrators should not see certain fields (e.g., SSN, credit cards)
 - Compliance requires field-level encryption (e.g., PCI DSS for card numbers)
 - You need different keys for different data fields
 - You need to prove specific fields are encrypted separately
 
 **Drawbacks:**
+
 - ❌ Cannot query encrypted fields (no WHERE clause on encrypted data)
 - ❌ Cannot index encrypted columns (slow queries)
 - ❌ Requires encryption/decryption in application (performance overhead)
@@ -246,7 +262,7 @@ For most HIPAA use cases, **AWS RDS encryption with KMS is sufficient**. Column-
 ### Implementation Example (If Needed)
 
 ```typescript
-import * as crypto from 'crypto';
+import * as crypto from "crypto";
 
 /**
  * Column-level encryption service using AWS KMS
@@ -262,13 +278,13 @@ export class EncryptionService {
   async encrypt(plaintext: string, keyId: string): Promise<string> {
     const command = new EncryptCommand({
       KeyId: keyId,
-      Plaintext: Buffer.from(plaintext, 'utf-8')
+      Plaintext: Buffer.from(plaintext, "utf-8"),
     });
 
     const response = await this.kmsClient.send(command);
 
     // Return base64-encoded ciphertext
-    return Buffer.from(response.CiphertextBlob).toString('base64');
+    return Buffer.from(response.CiphertextBlob).toString("base64");
   }
 
   /**
@@ -276,12 +292,12 @@ export class EncryptionService {
    */
   async decrypt(ciphertext: string): Promise<string> {
     const command = new DecryptCommand({
-      CiphertextBlob: Buffer.from(ciphertext, 'base64')
+      CiphertextBlob: Buffer.from(ciphertext, "base64"),
     });
 
     const response = await this.kmsClient.send(command);
 
-    return Buffer.from(response.Plaintext).toString('utf-8');
+    return Buffer.from(response.Plaintext).toString("utf-8");
   }
 }
 ```
@@ -321,16 +337,16 @@ All communication containing ePHI must use **TLS 1.2 or higher**:
 /**
  * Application Load Balancer with TLS 1.2+ enforcement
  */
-const alb = new elbv2.ApplicationLoadBalancer(stack, 'ALB', {
+const alb = new elbv2.ApplicationLoadBalancer(stack, "ALB", {
   vpc: vpc,
   internetFacing: true,
 
   // HIPAA: Drop invalid HTTP headers
-  dropInvalidHeaderFields: true
+  dropInvalidHeaderFields: true,
 });
 
 // HTTPS Listener with TLS 1.2+
-const httpsListener = alb.addListener('HttpsListener', {
+const httpsListener = alb.addListener("HttpsListener", {
   port: 443,
   protocol: elbv2.ApplicationProtocol.HTTPS,
 
@@ -338,20 +354,20 @@ const httpsListener = alb.addListener('HttpsListener', {
   certificates: [certificate],
 
   // HIPAA REQUIRED: TLS 1.2+ only
-  sslPolicy: elbv2.SslPolicy.TLS12_EXT,  // TLS 1.2 minimum
+  sslPolicy: elbv2.SslPolicy.TLS12_EXT, // TLS 1.2 minimum
 
-  defaultAction: elbv2.ListenerAction.forward([targetGroup])
+  defaultAction: elbv2.ListenerAction.forward([targetGroup]),
 });
 
 // Redirect HTTP to HTTPS (never allow unencrypted)
-alb.addListener('HttpListener', {
+alb.addListener("HttpListener", {
   port: 80,
   protocol: elbv2.ApplicationProtocol.HTTP,
   defaultAction: elbv2.ListenerAction.redirect({
-    protocol: 'HTTPS',
-    port: '443',
-    permanent: true
-  })
+    protocol: "HTTPS",
+    port: "443",
+    permanent: true,
+  }),
 });
 ```
 
@@ -362,14 +378,15 @@ alb.addListener('HttpListener', {
  * Request SSL/TLS certificate from ACM
  * Free and auto-renewing
  */
-const certificate = new acm.Certificate(stack, 'Certificate', {
-  domainName: 'api.example.com',
-  subjectAlternativeNames: ['*.api.example.com'],
-  validation: acm.CertificateValidation.fromDns(hostedZone)
+const certificate = new acm.Certificate(stack, "Certificate", {
+  domainName: "api.example.com",
+  subjectAlternativeNames: ["*.api.example.com"],
+  validation: acm.CertificateValidation.fromDns(hostedZone),
 });
 ```
 
 **Benefits of ACM:**
+
 - ✅ Free SSL/TLS certificates
 - ✅ Automatic renewal (no expiration issues)
 - ✅ FIPS 140-2 Level 2 compliant
@@ -382,28 +399,30 @@ const certificate = new acm.Certificate(stack, 'Certificate', {
  * Helmet middleware for security headers
  * Enforces HTTPS, prevents downgrade attacks
  */
-import helmet from 'helmet';
+import helmet from "helmet";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Security headers
-  app.use(helmet({
-    hsts: {
-      maxAge: 31536000,  // 1 year
-      includeSubDomains: true,
-      preload: true
-    },
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        upgradeInsecureRequests: []  // Force HTTPS
-      }
-    }
-  }));
+  app.use(
+    helmet({
+      hsts: {
+        maxAge: 31536000, // 1 year
+        includeSubDomains: true,
+        preload: true,
+      },
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          upgradeInsecureRequests: [], // Force HTTPS
+        },
+      },
+    })
+  );
 
   // Trust proxy (for ALB)
-  app.set('trust proxy', 1);
+  app.set("trust proxy", 1);
 
   await app.listen(3000);
 }
@@ -415,27 +434,27 @@ async function bootstrap() {
 /**
  * Axios client with HTTPS enforcement
  */
-import axios from 'axios';
+import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,  // Must be HTTPS in production
+  baseURL: process.env.NEXT_PUBLIC_API_URL, // Must be HTTPS in production
 
   // HIPAA: Only allow HTTPS
   httpsAgent: new https.Agent({
-    rejectUnauthorized: true,  // Verify SSL certificate
-    minVersion: 'TLSv1.2'  // Minimum TLS 1.2
+    rejectUnauthorized: true, // Verify SSL certificate
+    minVersion: "TLSv1.2", // Minimum TLS 1.2
   }),
 
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 // Reject requests over HTTP
 apiClient.interceptors.request.use((config) => {
-  if (config.url && config.url.startsWith('http://')) {
-    throw new Error('HIPAA violation: HTTP not allowed, use HTTPS');
+  if (config.url && config.url.startsWith("http://")) {
+    throw new Error("HIPAA violation: HTTP not allowed, use HTTPS");
   }
   return config;
 });
@@ -456,8 +475,8 @@ apiClient.interceptors.request.use((config) => {
  * Customer Managed KMS Key
  * Required for HIPAA compliance
  */
-const kmsKey = new kms.Key(stack, 'HIPAAKey', {
-  description: 'Customer managed key for HIPAA workloads',
+const kmsKey = new kms.Key(stack, "HIPAAKey", {
+  description: "Customer managed key for HIPAA workloads",
 
   // REQUIRED: Automatic key rotation every year
   enableKeyRotation: true,
@@ -467,11 +486,12 @@ const kmsKey = new kms.Key(stack, 'HIPAAKey', {
 
   // Deletion protection
   removalPolicy: cdk.RemovalPolicy.RETAIN,
-  pendingWindow: cdk.Duration.days(30)  // 30-day recovery period
+  pendingWindow: cdk.Duration.days(30), // 30-day recovery period
 });
 ```
 
 **Why Customer Managed Keys?**
+
 - ✅ Full control over key policies and permissions
 - ✅ Required for audit trails and compliance
 - ✅ Can grant cross-account access if needed
@@ -479,6 +499,7 @@ const kmsKey = new kms.Key(stack, 'HIPAAKey', {
 - ✅ CloudTrail logs all key usage
 
 **AWS-Managed Keys limitations:**
+
 - ❌ No rotation control
 - ❌ Limited visibility in audit logs
 - ❌ Cannot customize key policies
@@ -492,7 +513,7 @@ const kmsKey = new kms.Key(stack, 'HIPAAKey', {
 /**
  * KMS key with automatic annual rotation
  */
-enableKeyRotation: true  // Rotates every 365 days automatically
+enableKeyRotation: true; // Rotates every 365 days automatically
 ```
 
 **Manual Rotation (Advanced):**
@@ -528,42 +549,33 @@ const keyPolicy = new iam.PolicyDocument({
   statements: [
     // Root account (for key management)
     new iam.PolicyStatement({
-      sid: 'Enable IAM User Permissions',
+      sid: "Enable IAM User Permissions",
       principals: [new iam.AccountRootPrincipal()],
-      actions: ['kms:*'],
-      resources: ['*']
+      actions: ["kms:*"],
+      resources: ["*"],
     }),
 
     // Allow specific service (RDS) to use key
     new iam.PolicyStatement({
-      sid: 'Allow RDS Service',
-      principals: [new iam.ServicePrincipal('rds.amazonaws.com')],
-      actions: [
-        'kms:Decrypt',
-        'kms:DescribeKey',
-        'kms:CreateGrant'
-      ],
-      resources: ['*'],
+      sid: "Allow RDS Service",
+      principals: [new iam.ServicePrincipal("rds.amazonaws.com")],
+      actions: ["kms:Decrypt", "kms:DescribeKey", "kms:CreateGrant"],
+      resources: ["*"],
       conditions: {
         StringEquals: {
-          'kms:ViaService': [
-            `rds.${stack.region}.amazonaws.com`
-          ]
-        }
-      }
+          "kms:ViaService": [`rds.${stack.region}.amazonaws.com`],
+        },
+      },
     }),
 
     // Allow application role to decrypt only
     new iam.PolicyStatement({
-      sid: 'Allow Application Decryption',
+      sid: "Allow Application Decryption",
       principals: [appRole],
-      actions: [
-        'kms:Decrypt',
-        'kms:DescribeKey'
-      ],
-      resources: ['*']
-    })
-  ]
+      actions: ["kms:Decrypt", "kms:DescribeKey"],
+      resources: ["*"],
+    }),
+  ],
 });
 ```
 
@@ -575,23 +587,27 @@ const keyPolicy = new iam.PolicyDocument({
 /**
  * CloudWatch alarm for unauthorized KMS access attempts
  */
-const unauthorizedKMSAttempts = new logs.MetricFilter(stack, 'UnauthorizedKMS', {
-  logGroup: cloudtrailLogGroup,
-  filterPattern: logs.FilterPattern.all(
-    logs.FilterPattern.stringValue('$.eventName', '=', 'Decrypt'),
-    logs.FilterPattern.stringValue('$.errorCode', '=', 'AccessDenied')
-  ),
-  metricNamespace: 'HIPAA/Security',
-  metricName: 'UnauthorizedKMSAccess',
-  metricValue: '1'
-});
+const unauthorizedKMSAttempts = new logs.MetricFilter(
+  stack,
+  "UnauthorizedKMS",
+  {
+    logGroup: cloudtrailLogGroup,
+    filterPattern: logs.FilterPattern.all(
+      logs.FilterPattern.stringValue("$.eventName", "=", "Decrypt"),
+      logs.FilterPattern.stringValue("$.errorCode", "=", "AccessDenied")
+    ),
+    metricNamespace: "HIPAA/Security",
+    metricName: "UnauthorizedKMSAccess",
+    metricValue: "1",
+  }
+);
 
 // Alarm on unauthorized attempts
-new cloudwatch.Alarm(stack, 'KMSAccessAlarm', {
+new cloudwatch.Alarm(stack, "KMSAccessAlarm", {
   metric: unauthorizedKMSAttempts.metric(),
   threshold: 1,
   evaluationPeriods: 1,
-  alarmDescription: 'Unauthorized KMS key access attempt detected'
+  alarmDescription: "Unauthorized KMS key access attempt detected",
 });
 ```
 
@@ -614,6 +630,7 @@ preferredBackupWindow: '03:00-04:00',  // Low-traffic window
 ```
 
 **Important:**
+
 - ✅ Automated backups are encrypted with same KMS key as instance
 - ✅ Manual snapshots must be explicitly copied with encryption
 - ⚠️ **Cannot share encrypted snapshots** without granting KMS key access
@@ -624,12 +641,12 @@ preferredBackupWindow: '03:00-04:00',  // Low-traffic window
 /**
  * Copy unencrypted snapshot to encrypted snapshot
  */
-const copySnapshot = new rds.CfnDBSnapshot(stack, 'EncryptedSnapshot', {
-  dbSnapshotIdentifier: 'encrypted-snapshot',
-  sourceDbSnapshotIdentifier: 'unencrypted-snapshot',
+const copySnapshot = new rds.CfnDBSnapshot(stack, "EncryptedSnapshot", {
+  dbSnapshotIdentifier: "encrypted-snapshot",
+  sourceDbSnapshotIdentifier: "unencrypted-snapshot",
 
   // Encrypt copy with KMS
-  kmsKeyId: kmsKey.keyArn
+  kmsKeyId: kmsKey.keyArn,
 });
 ```
 
@@ -639,15 +656,15 @@ const copySnapshot = new rds.CfnDBSnapshot(stack, 'EncryptedSnapshot', {
 /**
  * S3 bucket for encrypted backups
  */
-const backupBucket = new s3.Bucket(stack, 'BackupBucket', {
-  bucketName: 'hipaa-backups',
+const backupBucket = new s3.Bucket(stack, "BackupBucket", {
+  bucketName: "hipaa-backups",
 
   // HIPAA REQUIRED: Encryption at rest
   encryption: s3.BucketEncryption.KMS,
   encryptionKey: kmsKey,
 
   // Enforce encryption for all uploads
-  enforceSSL: true,  // Require HTTPS
+  enforceSSL: true, // Require HTTPS
 
   // Block public access
   blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -658,16 +675,16 @@ const backupBucket = new s3.Bucket(stack, 'BackupBucket', {
   // Lifecycle policy
   lifecycleRules: [
     {
-      id: 'DeleteOldBackups',
-      expiration: cdk.Duration.days(2555),  // 7 years (HIPAA retention)
+      id: "DeleteOldBackups",
+      expiration: cdk.Duration.days(2555), // 7 years (HIPAA retention)
       transitions: [
         {
           storageClass: s3.StorageClass.GLACIER,
-          transitionAfter: cdk.Duration.days(90)  // Archive after 90 days
-        }
-      ]
-    }
-  ]
+          transitionAfter: cdk.Duration.days(90), // Archive after 90 days
+        },
+      ],
+    },
+  ],
 });
 ```
 
@@ -681,30 +698,28 @@ const backupBucket = new s3.Bucket(stack, 'BackupBucket', {
 /**
  * Integration test: Verify database encryption
  */
-describe('Database Encryption', () => {
-  it('should have encryption enabled', async () => {
+describe("Database Encryption", () => {
+  it("should have encryption enabled", async () => {
     const dbInstance = await rds.describeDBInstances({
-      DBInstanceIdentifier: 'my-db-instance'
+      DBInstanceIdentifier: "my-db-instance",
     });
 
     expect(dbInstance.DBInstances[0].StorageEncrypted).toBe(true);
     expect(dbInstance.DBInstances[0].KmsKeyId).toBeDefined();
   });
 
-  it('should enforce SSL connections', async () => {
+  it("should enforce SSL connections", async () => {
     // Attempt connection without SSL
     const connectionWithoutSSL = {
       host: process.env.DB_HOST,
       port: 5432,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      ssl: false
+      ssl: false,
     };
 
     // Should fail if rds.force_ssl = 1
-    await expect(
-      new Client(connectionWithoutSSL).connect()
-    ).rejects.toThrow();
+    await expect(new Client(connectionWithoutSSL).connect()).rejects.toThrow();
   });
 });
 ```
@@ -715,32 +730,30 @@ describe('Database Encryption', () => {
 /**
  * Test: Ensure HTTPS is enforced
  */
-describe('HTTPS Enforcement', () => {
-  it('should reject HTTP requests', async () => {
-    const httpUrl = process.env.API_URL.replace('https://', 'http://');
+describe("HTTPS Enforcement", () => {
+  it("should reject HTTP requests", async () => {
+    const httpUrl = process.env.API_URL.replace("https://", "http://");
 
-    await expect(
-      axios.get(httpUrl + '/health')
-    ).rejects.toThrow();
+    await expect(axios.get(httpUrl + "/health")).rejects.toThrow();
   });
 
-  it('should use TLS 1.2+', async () => {
-    const response = await axios.get(process.env.API_URL + '/health', {
+  it("should use TLS 1.2+", async () => {
+    const response = await axios.get(process.env.API_URL + "/health", {
       httpsAgent: new https.Agent({
-        minVersion: 'TLSv1.2'
-      })
+        minVersion: "TLSv1.2",
+      }),
     });
 
     expect(response.status).toBe(200);
   });
 
-  it('should redirect HTTP to HTTPS', async () => {
+  it("should redirect HTTP to HTTPS", async () => {
     const response = await axios.get(
-      process.env.API_URL.replace('https://', 'http://') + '/health',
+      process.env.API_URL.replace("https://", "http://") + "/health",
       { maxRedirects: 0, validateStatus: () => true }
     );
 
-    expect(response.status).toBe(301);  // Permanent redirect
+    expect(response.status).toBe(301); // Permanent redirect
     expect(response.headers.location).toMatch(/^https:\/\//);
   });
 });
@@ -751,30 +764,37 @@ describe('HTTPS Enforcement', () => {
 ## Common Mistakes & How to Avoid Them
 
 ### ❌ Mistake 1: Unencrypted Database
+
 **Problem:** Creating RDS instance without encryption
 **Solution:** Always set `storageEncrypted: true` at creation (cannot be added later!)
 
 ### ❌ Mistake 2: Using AWS-Managed Keys
+
 **Problem:** Using default AWS-managed KMS keys for HIPAA workloads
 **Solution:** Always create Customer Managed Keys with rotation enabled
 
 ### ❌ Mistake 3: No Key Rotation
+
 **Problem:** KMS keys never rotated
 **Solution:** Enable automatic rotation (`enableKeyRotation: true`)
 
 ### ❌ Mistake 4: TLS 1.0 / 1.1 Allowed
+
 **Problem:** Load balancer allows deprecated TLS versions
 **Solution:** Set `sslPolicy: elbv2.SslPolicy.TLS12_EXT` (TLS 1.2+)
 
 ### ❌ Mistake 5: HTTP Allowed
+
 **Problem:** API accepts both HTTP and HTTPS
 **Solution:** Redirect all HTTP to HTTPS, reject HTTP at application level
 
 ### ❌ Mistake 6: Database Connections Without SSL
+
 **Problem:** `sslmode=disable` in connection string
 **Solution:** Always use `sslmode=require` or `sslmode=verify-full`
 
 ### ❌ Mistake 7: Unencrypted Backups
+
 **Problem:** Manual backups not encrypted
 **Solution:** Always encrypt snapshots, verify S3 bucket encryption
 
@@ -802,16 +822,19 @@ Before deploying backend with ePHI:
 ## Additional Resources
 
 **HIPAA Guidance:**
+
 - [HHS Encryption FAQ](https://www.hhs.gov/hipaa/for-professionals/faq/encryption/index.html)
 - [HIPAA Encryption Requirements 2025](https://www.hipaajournal.com/hipaa-encryption-requirements/)
 - [2025 Encryption Updates](https://www.censinet.com/perspectives/hipaa-encryption-protocols-2025-updates)
 
 **AWS Documentation:**
+
 - [RDS Encryption Best Practices](https://docs.aws.amazon.com/prescriptive-guidance/latest/encryption-best-practices/rds.html)
 - [AWS KMS Best Practices](https://docs.aws.amazon.com/kms/latest/developerguide/best-practices.html)
 - [Architecting for HIPAA on AWS](https://docs.aws.amazon.com/whitepapers/latest/architecting-hipaa-security-and-compliance-on-aws/amazon-rds-for-postgresql.html)
 
 **Standards:**
+
 - [NIST FIPS 140-2](https://csrc.nist.gov/publications/detail/fips/140/2/final)
 - [TLS 1.2/1.3 Specifications](https://datatracker.ietf.org/doc/html/rfc5246)
 
@@ -824,10 +847,11 @@ Continue to the next section:
 **[→ Audit Logging](03-audit-logging.md)**
 
 Or explore related topics:
+
 - [Authentication](01-authentication.md) - Protect encrypted data with auth
 - [Data Handling](04-data-handling.md) - Manage encrypted data lifecycle
 
 ---
 
-*Last Updated: November 2025*
-*Part of the HIPAA Compliance Handbook - Backend Playbook*
+_Last Updated: November 2025_
+_Part of the HIPAA Compliance Handbook - Backend Playbook_

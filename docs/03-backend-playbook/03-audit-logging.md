@@ -1,3 +1,10 @@
+---
+layout: default
+title: Audit Logging
+parent: Backend Playbook
+nav_order: 4
+---
+
 # Audit Logging
 
 > Recording and monitoring all access to ePHI for HIPAA compliance
@@ -9,6 +16,7 @@
 **Audit Controls** are a required technical safeguard under HIPAA Security Rule § 164.312(b). Every access, modification, or deletion of ePHI must be logged with sufficient detail to reconstruct "who did what, when, where, and why."
 
 Audit logs serve two critical purposes:
+
 1. **Breach Detection** - Identify unauthorized access or suspicious activity
 2. **Compliance Evidence** - Demonstrate due diligence during audits or investigations
 
@@ -39,12 +47,14 @@ Audit logs serve two critical purposes:
 **Required Events for All ePHI Access:**
 
 #### 1. Data Operations
+
 - **Create** - New PHI records created
 - **Read** - PHI viewed or accessed
 - **Update** - PHI modified
 - **Delete** - PHI removed (hard delete only!)
 
 #### 2. Authentication Events
+
 - Login attempts (success and failure)
 - Logout events
 - MFA verification (success and failure)
@@ -52,12 +62,14 @@ Audit logs serve two critical purposes:
 - Account lockouts
 
 #### 3. Authorization Events
+
 - Permission grants/revocations
 - Role assignments/changes
 - Access denied attempts (very important!)
 - Privilege escalation
 
 #### 4. System Events
+
 - Configuration changes
 - Security policy updates
 - Encryption key access
@@ -65,6 +77,7 @@ Audit logs serve two critical purposes:
 - Database schema changes
 
 #### 5. Administrative Actions
+
 - User account creation/deletion
 - Role modifications
 - Policy changes
@@ -89,54 +102,54 @@ Every audit log entry must capture:
 ```typescript
 interface AuditLogEntry {
   // WHO - User identification
-  userId: string;              // Unique user ID (UUID)
-  username: string;            // Username or email
-  userRole: string;            // User's role at time of action
+  userId: string; // Unique user ID (UUID)
+  username: string; // Username or email
+  userRole: string; // User's role at time of action
 
   // WHAT - Action details
-  action: AuditAction;         // Enum: PHI_READ, PHI_WRITE, PHI_DELETE, etc.
-  resource: string;            // Resource type: 'patient', 'appointment', etc.
-  resourceId: string;          // Specific record ID (UUID)
+  action: AuditAction; // Enum: PHI_READ, PHI_WRITE, PHI_DELETE, etc.
+  resource: string; // Resource type: 'patient', 'appointment', etc.
+  resourceId: string; // Specific record ID (UUID)
 
   // WHEN - Timestamp
-  timestamp: Date;             // ISO 8601 format, UTC timezone
+  timestamp: Date; // ISO 8601 format, UTC timezone
 
   // WHERE - Source information
-  ipAddress: string;           // Client IP address
-  userAgent?: string;          // Browser/client info
-  source: string;              // 'web', 'mobile', 'api', 'internal'
+  ipAddress: string; // Client IP address
+  userAgent?: string; // Browser/client info
+  source: string; // 'web', 'mobile', 'api', 'internal'
 
   // RESULT - Outcome
-  status: 'success' | 'failure';
-  errorCode?: string;          // If failed, why?
+  status: "success" | "failure";
+  errorCode?: string; // If failed, why?
 
   // CONTEXT - Additional details (optional but recommended)
-  details?: Record<string, any>;  // Additional context (NO PHI!)
-  requestId?: string;          // Correlation ID for distributed tracing
+  details?: Record<string, any>; // Additional context (NO PHI!)
+  requestId?: string; // Correlation ID for distributed tracing
 }
 
 enum AuditAction {
   // PHI Operations
-  PHI_READ = 'PHI_READ',
-  PHI_WRITE = 'PHI_WRITE',
-  PHI_DELETE = 'PHI_DELETE',
-  PHI_EXPORT = 'PHI_EXPORT',
+  PHI_READ = "PHI_READ",
+  PHI_WRITE = "PHI_WRITE",
+  PHI_DELETE = "PHI_DELETE",
+  PHI_EXPORT = "PHI_EXPORT",
 
   // Authentication
-  USER_LOGIN = 'USER_LOGIN',
-  USER_LOGOUT = 'USER_LOGOUT',
-  MFA_VERIFY = 'MFA_VERIFY',
-  PASSWORD_CHANGE = 'PASSWORD_CHANGE',
+  USER_LOGIN = "USER_LOGIN",
+  USER_LOGOUT = "USER_LOGOUT",
+  MFA_VERIFY = "MFA_VERIFY",
+  PASSWORD_CHANGE = "PASSWORD_CHANGE",
 
   // Authorization
-  ACCESS_DENIED = 'ACCESS_DENIED',
-  ROLE_ASSIGNED = 'ROLE_ASSIGNED',
-  PERMISSION_GRANTED = 'PERMISSION_GRANTED',
+  ACCESS_DENIED = "ACCESS_DENIED",
+  ROLE_ASSIGNED = "ROLE_ASSIGNED",
+  PERMISSION_GRANTED = "PERMISSION_GRANTED",
 
   // System
-  CONFIG_CHANGE = 'CONFIG_CHANGE',
-  ENCRYPTION_KEY_ACCESS = 'ENCRYPTION_KEY_ACCESS',
-  BACKUP_CREATED = 'BACKUP_CREATED'
+  CONFIG_CHANGE = "CONFIG_CHANGE",
+  ENCRYPTION_KEY_ACCESS = "ENCRYPTION_KEY_ACCESS",
+  BACKUP_CREATED = "BACKUP_CREATED",
 }
 ```
 
@@ -149,12 +162,12 @@ enum AuditAction {
 ```javascript
 // HIPAA VIOLATION - Contains actual PHI!
 auditLog.create({
-  action: 'PHI_READ',
+  action: "PHI_READ",
   details: {
-    patientName: 'John Doe',
-    ssn: '123-45-6789',
-    diagnosis: 'Type 2 Diabetes'
-  }
+    patientName: "John Doe",
+    ssn: "123-45-6789",
+    diagnosis: "Type 2 Diabetes",
+  },
 });
 ```
 
@@ -163,13 +176,13 @@ auditLog.create({
 ```javascript
 // HIPAA COMPLIANT - References only, no PHI content
 auditLog.create({
-  action: 'PHI_READ',
-  resource: 'patient',
-  resourceId: 'uuid-of-patient-record',
+  action: "PHI_READ",
+  resource: "patient",
+  resourceId: "uuid-of-patient-record",
   details: {
-    fieldsAccessed: ['name', 'ssn', 'diagnosis'],
-    recordType: 'medical_record'
-  }
+    fieldsAccessed: ["name", "ssn", "diagnosis"],
+    recordType: "medical_record",
+  },
 });
 ```
 
@@ -182,9 +195,9 @@ auditLog.create({
 ### Audit Logging Service
 
 ```typescript
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from './prisma.service';
-import { CloudWatchLogsService } from './cloudwatch.service';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "./prisma.service";
+import { CloudWatchLogsService } from "./cloudwatch.service";
 
 /**
  * Audit logging service for HIPAA compliance
@@ -205,23 +218,25 @@ export class AuditLogService {
     const auditEntry = {
       id: this.generateId(),
       timestamp: new Date(),
-      status: entry.status || 'success',
-      ...entry
+      status: entry.status || "success",
+      ...entry,
     };
 
     // Log to database (for application queries)
     await this.prisma.auditLog.create({
-      data: auditEntry
+      data: auditEntry,
     });
 
     // Log to CloudWatch (for long-term retention)
     await this.cloudwatch.putLogEvents({
-      logGroupName: '/hipaa/audit-logs',
+      logGroupName: "/hipaa/audit-logs",
       logStreamName: this.getLogStreamName(),
-      logEvents: [{
-        timestamp: auditEntry.timestamp.getTime(),
-        message: JSON.stringify(auditEntry)
-      }]
+      logEvents: [
+        {
+          timestamp: auditEntry.timestamp.getTime(),
+          message: JSON.stringify(auditEntry),
+        },
+      ],
     });
   }
 
@@ -238,14 +253,14 @@ export class AuditLogService {
     await this.log({
       userId,
       username: request.user?.username,
-      userRole: request.user?.roles?.join(','),
+      userRole: request.user?.roles?.join(","),
       action,
       resource,
       resourceId,
       ipAddress: this.getClientIp(request),
-      userAgent: request.headers['user-agent'],
+      userAgent: request.headers["user-agent"],
       source: this.determineSource(request),
-      requestId: request.id  // Correlation ID
+      requestId: request.id, // Correlation ID
     });
   }
 
@@ -255,7 +270,7 @@ export class AuditLogService {
   async logAuthEvent(
     userId: string,
     action: AuditAction,
-    status: 'success' | 'failure',
+    status: "success" | "failure",
     request: Request,
     errorCode?: string
   ): Promise<void> {
@@ -264,8 +279,8 @@ export class AuditLogService {
       action,
       status,
       ipAddress: this.getClientIp(request),
-      userAgent: request.headers['user-agent'],
-      errorCode
+      userAgent: request.headers["user-agent"],
+      errorCode,
     });
   }
 
@@ -274,10 +289,10 @@ export class AuditLogService {
    */
   private getClientIp(request: Request): string {
     return (
-      request.headers['x-forwarded-for']?.split(',')[0] ||
-      request.headers['x-real-ip'] ||
+      request.headers["x-forwarded-for"]?.split(",")[0] ||
+      request.headers["x-real-ip"] ||
       request.connection.remoteAddress ||
-      'unknown'
+      "unknown"
     );
   }
 
@@ -285,15 +300,15 @@ export class AuditLogService {
    * Determine request source
    */
   private determineSource(request: Request): string {
-    const userAgent = request.headers['user-agent'] || '';
+    const userAgent = request.headers["user-agent"] || "";
 
-    if (userAgent.includes('Mobile') || userAgent.includes('Android')) {
-      return 'mobile';
+    if (userAgent.includes("Mobile") || userAgent.includes("Android")) {
+      return "mobile";
     }
-    if (userAgent.includes('Postman') || userAgent.includes('curl')) {
-      return 'api';
+    if (userAgent.includes("Postman") || userAgent.includes("curl")) {
+      return "api";
     }
-    return 'web';
+    return "web";
   }
 
   private generateId(): string {
@@ -302,7 +317,7 @@ export class AuditLogService {
 
   private getLogStreamName(): string {
     // One log stream per day
-    return new Date().toISOString().split('T')[0];
+    return new Date().toISOString().split("T")[0];
   }
 }
 ```
@@ -314,11 +329,11 @@ import {
   Injectable,
   NestInterceptor,
   ExecutionContext,
-  CallHandler
-} from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
-import { Reflector } from '@nestjs/core';
+  CallHandler,
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { tap, catchError } from "rxjs/operators";
+import { Reflector } from "@nestjs/core";
 
 /**
  * Interceptor to automatically log PHI access
@@ -336,13 +351,10 @@ export class AuditLogInterceptor implements NestInterceptor {
     const handler = context.getHandler();
 
     // Get metadata from @AuditLog() decorator
-    const auditConfig = this.reflector.get<AuditConfig>(
-      'audit',
-      handler
-    );
+    const auditConfig = this.reflector.get<AuditConfig>("audit", handler);
 
     if (!auditConfig) {
-      return next.handle();  // No audit logging for this endpoint
+      return next.handle(); // No audit logging for this endpoint
     }
 
     const startTime = Date.now();
@@ -366,13 +378,13 @@ export class AuditLogInterceptor implements NestInterceptor {
           action: auditConfig.action,
           resource: auditConfig.resource,
           resourceId: this.extractResourceId(request, null, auditConfig),
-          status: 'failure',
-          errorCode: error.status || 'UNKNOWN_ERROR',
+          status: "failure",
+          errorCode: error.status || "UNKNOWN_ERROR",
           ipAddress: this.getClientIp(request),
-          timestamp: new Date()
+          timestamp: new Date(),
         });
 
-        throw error;  // Re-throw to maintain error flow
+        throw error; // Re-throw to maintain error flow
       })
     );
   }
@@ -386,8 +398,8 @@ export class AuditLogInterceptor implements NestInterceptor {
     config: AuditConfig
   ): string {
     // Try URL params first (e.g., /patients/:id)
-    if (request.params[config.idParam || 'id']) {
-      return request.params[config.idParam || 'id'];
+    if (request.params[config.idParam || "id"]) {
+      return request.params[config.idParam || "id"];
     }
 
     // Try response body (for CREATE operations)
@@ -395,14 +407,14 @@ export class AuditLogInterceptor implements NestInterceptor {
       return response.id;
     }
 
-    return 'unknown';
+    return "unknown";
   }
 
   private getClientIp(request: Request): string {
     return (
-      request.headers['x-forwarded-for']?.split(',')[0] ||
+      request.headers["x-forwarded-for"]?.split(",")[0] ||
       request.connection.remoteAddress ||
-      'unknown'
+      "unknown"
     );
   }
 }
@@ -413,29 +425,28 @@ export class AuditLogInterceptor implements NestInterceptor {
 interface AuditConfig {
   action: AuditAction;
   resource: string;
-  idParam?: string;  // URL parameter name for resource ID
+  idParam?: string; // URL parameter name for resource ID
 }
 ```
 
 ### Custom Decorator
 
 ```typescript
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata } from "@nestjs/common";
 
 /**
  * Decorator to enable audit logging on endpoint
  * Usage: @AuditLog({ action: AuditAction.PHI_READ, resource: 'patient' })
  */
-export const AuditLog = (config: AuditConfig) =>
-  SetMetadata('audit', config);
+export const AuditLog = (config: AuditConfig) => SetMetadata("audit", config);
 ```
 
 ### Controller Usage
 
 ```typescript
-@Controller('patients')
+@Controller("patients")
 @UseGuards(JwtAuthGuard, RolesGuard)
-@UseInterceptors(AuditLogInterceptor)  // Enable audit logging
+@UseInterceptors(AuditLogInterceptor) // Enable audit logging
 export class PatientsController {
   constructor(
     private patientsService: PatientsService,
@@ -445,21 +456,21 @@ export class PatientsController {
   /**
    * Get patient details - audit logged automatically
    */
-  @Get(':id')
+  @Get(":id")
   @Roles(Role.PROVIDER, Role.NURSE)
-  @AuditLog({ action: AuditAction.PHI_READ, resource: 'patient' })
-  async getPatient(@Param('id') id: string) {
+  @AuditLog({ action: AuditAction.PHI_READ, resource: "patient" })
+  async getPatient(@Param("id") id: string) {
     return this.patientsService.findOne(id);
   }
 
   /**
    * Update patient - audit logged automatically
    */
-  @Patch(':id')
+  @Patch(":id")
   @Roles(Role.PROVIDER)
-  @AuditLog({ action: AuditAction.PHI_WRITE, resource: 'patient' })
+  @AuditLog({ action: AuditAction.PHI_WRITE, resource: "patient" })
   async updatePatient(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() updateDto: UpdatePatientDto
   ) {
     return this.patientsService.update(id, updateDto);
@@ -468,11 +479,11 @@ export class PatientsController {
   /**
    * Delete patient - audit logged with additional context
    */
-  @Delete(':id')
+  @Delete(":id")
   @Roles(Role.PROVIDER, Role.SUPER_ADMIN)
-  @AuditLog({ action: AuditAction.PHI_DELETE, resource: 'patient' })
+  @AuditLog({ action: AuditAction.PHI_DELETE, resource: "patient" })
   async deletePatient(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @User() user: UserEntity,
     @Req() request: Request
   ) {
@@ -481,13 +492,13 @@ export class PatientsController {
       userId: user.id,
       username: user.username,
       action: AuditAction.PHI_DELETE,
-      resource: 'patient',
+      resource: "patient",
       resourceId: id,
       ipAddress: request.ip,
       details: {
-        reason: 'Patient requested deletion',  // Document why
-        approvedBy: user.id
-      }
+        reason: "Patient requested deletion", // Document why
+        approvedBy: user.id,
+      },
     });
 
     // Perform hard delete (no soft delete for PHI!)
@@ -601,69 +612,69 @@ model AuditLog {
  * CloudWatch Log Group for audit logs
  * Required: 6+ year retention for HIPAA
  */
-const auditLogGroup = new logs.LogGroup(stack, 'AuditLogGroup', {
-  logGroupName: '/hipaa/audit-logs',
+const auditLogGroup = new logs.LogGroup(stack, "AuditLogGroup", {
+  logGroupName: "/hipaa/audit-logs",
 
   // HIPAA REQUIRED: 6-year retention minimum
-  retention: logs.RetentionDays.SIX_YEARS,  // 2192 days
+  retention: logs.RetentionDays.SIX_YEARS, // 2192 days
 
   // Encryption at rest
   encryptionKey: kmsKey,
 
   // Prevent accidental deletion
-  removalPolicy: cdk.RemovalPolicy.RETAIN
+  removalPolicy: cdk.RemovalPolicy.RETAIN,
 });
 ```
 
 ### Structured Logging with Winston
 
 ```typescript
-import * as winston from 'winston';
-import * as CloudWatchTransport from 'winston-cloudwatch';
+import * as winston from "winston";
+import * as CloudWatchTransport from "winston-cloudwatch";
 
 /**
  * Configure Winston for structured logging to CloudWatch
  */
 const logger = winston.createLogger({
-  level: 'info',
+  level: "info",
   format: winston.format.combine(
     winston.format.timestamp(),
-    winston.format.json()  // Structured JSON logs
+    winston.format.json() // Structured JSON logs
   ),
   transports: [
     // Console (for development)
     new winston.transports.Console({
-      format: winston.format.simple()
+      format: winston.format.simple(),
     }),
 
     // CloudWatch Logs (for production)
     new CloudWatchTransport({
-      logGroupName: '/hipaa/audit-logs',
+      logGroupName: "/hipaa/audit-logs",
       logStreamName: () => {
         // One stream per day
-        return new Date().toISOString().split('T')[0];
+        return new Date().toISOString().split("T")[0];
       },
       awsRegion: process.env.AWS_REGION,
-      jsonMessage: true,  // Send as JSON
+      jsonMessage: true, // Send as JSON
       messageFormatter: (logObject) => {
         // Ensure PHI is not logged
         return JSON.stringify(logObject);
-      }
-    })
-  ]
+      },
+    }),
+  ],
 });
 
 /**
  * Log audit event to CloudWatch
  */
-logger.info('PHI Access', {
+logger.info("PHI Access", {
   audit: {
-    userId: 'user-uuid',
-    action: 'PHI_READ',
-    resource: 'patient',
-    resourceId: 'patient-uuid',
-    timestamp: new Date().toISOString()
-  }
+    userId: "user-uuid",
+    action: "PHI_READ",
+    resource: "patient",
+    resourceId: "patient-uuid",
+    timestamp: new Date().toISOString(),
+  },
 });
 ```
 
@@ -680,10 +691,12 @@ logger.info('PHI Access', {
 ### Implementation Strategy
 
 **Hot Storage (Recent Logs):**
+
 - Database: Last 30-90 days for fast application queries
 - CloudWatch Logs: Last 30 days for debugging
 
 **Cold Storage (Historical Logs):**
+
 - S3 with Glacier transition: 90 days to 6+ years
 - Immutable with S3 Object Lock
 
@@ -692,8 +705,8 @@ logger.info('PHI Access', {
  * S3 bucket for long-term audit log retention
  * Immutable storage with Object Lock
  */
-const auditLogBucket = new s3.Bucket(stack, 'AuditLogArchive', {
-  bucketName: 'hipaa-audit-logs-archive',
+const auditLogBucket = new s3.Bucket(stack, "AuditLogArchive", {
+  bucketName: "hipaa-audit-logs-archive",
 
   // HIPAA: Encryption at rest
   encryption: s3.BucketEncryption.KMS,
@@ -711,33 +724,33 @@ const auditLogBucket = new s3.Bucket(stack, 'AuditLogArchive', {
   // Lifecycle: Move to Glacier after 90 days
   lifecycleRules: [
     {
-      id: 'ArchiveAuditLogs',
+      id: "ArchiveAuditLogs",
       enabled: true,
 
       // Transition to Glacier after 90 days
       transitions: [
         {
           storageClass: s3.StorageClass.GLACIER,
-          transitionAfter: cdk.Duration.days(90)
-        }
+          transitionAfter: cdk.Duration.days(90),
+        },
       ],
 
       // Delete after 7 years (6 years + 1 year buffer)
-      expiration: cdk.Duration.days(2555)
-    }
-  ]
+      expiration: cdk.Duration.days(2555),
+    },
+  ],
 });
 
 // Object Lock configuration (WORM - Write Once, Read Many)
 const cfnBucket = auditLogBucket.node.defaultChild as s3.CfnBucket;
 cfnBucket.objectLockConfiguration = {
-  objectLockEnabled: 'Enabled',
+  objectLockEnabled: "Enabled",
   rule: {
     defaultRetention: {
-      mode: 'GOVERNANCE',  // Can be overridden by admin
-      years: 6
-    }
-  }
+      mode: "GOVERNANCE", // Can be overridden by admin
+      years: 6,
+    },
+  },
 };
 ```
 
@@ -748,20 +761,20 @@ cfnBucket.objectLockConfiguration = {
  * Lambda function to export CloudWatch logs to S3
  * Runs daily to archive logs
  */
-const exportLambda = new lambda.Function(stack, 'ExportAuditLogs', {
+const exportLambda = new lambda.Function(stack, "ExportAuditLogs", {
   runtime: lambda.Runtime.NODEJS_18_X,
-  handler: 'index.handler',
-  code: lambda.Code.fromAsset('lambda/export-logs'),
+  handler: "index.handler",
+  code: lambda.Code.fromAsset("lambda/export-logs"),
   environment: {
-    LOG_GROUP_NAME: '/hipaa/audit-logs',
-    BUCKET_NAME: auditLogBucket.bucketName
+    LOG_GROUP_NAME: "/hipaa/audit-logs",
+    BUCKET_NAME: auditLogBucket.bucketName,
   },
-  timeout: cdk.Duration.minutes(15)
+  timeout: cdk.Duration.minutes(15),
 });
 
 // Schedule daily export
-const rule = new events.Rule(stack, 'ExportSchedule', {
-  schedule: events.Schedule.cron({ hour: '2', minute: '0' })  // 2 AM daily
+const rule = new events.Rule(stack, "ExportSchedule", {
+  schedule: events.Schedule.cron({ hour: "2", minute: "0" }), // 2 AM daily
 });
 rule.addTarget(new targets.LambdaFunction(exportLambda));
 
@@ -859,34 +872,35 @@ async findSuspiciousActivity(hours: number = 24): Promise<any[]> {
 /**
  * Alarm: High rate of failed PHI access attempts
  */
-const failedAccessMetric = new logs.MetricFilter(stack, 'FailedAccess', {
+const failedAccessMetric = new logs.MetricFilter(stack, "FailedAccess", {
   logGroup: auditLogGroup,
   filterPattern: logs.FilterPattern.all(
-    logs.FilterPattern.stringValue('$.status', '=', 'failure'),
-    logs.FilterPattern.stringValue('$.action', '=', 'ACCESS_DENIED')
+    logs.FilterPattern.stringValue("$.status", "=", "failure"),
+    logs.FilterPattern.stringValue("$.action", "=", "ACCESS_DENIED")
   ),
-  metricNamespace: 'HIPAA/Security',
-  metricName: 'FailedPHIAccess',
-  metricValue: '1'
+  metricNamespace: "HIPAA/Security",
+  metricName: "FailedPHIAccess",
+  metricValue: "1",
 });
 
-const alarm = new cloudwatch.Alarm(stack, 'FailedAccessAlarm', {
+const alarm = new cloudwatch.Alarm(stack, "FailedAccessAlarm", {
   metric: failedAccessMetric.metric({
-    statistic: 'Sum',
-    period: cdk.Duration.minutes(5)
+    statistic: "Sum",
+    period: cdk.Duration.minutes(5),
   }),
-  threshold: 10,  // More than 10 failures in 5 minutes
+  threshold: 10, // More than 10 failures in 5 minutes
   evaluationPeriods: 1,
-  alarmDescription: 'High rate of failed PHI access attempts',
-  actionsEnabled: true
+  alarmDescription: "High rate of failed PHI access attempts",
+  actionsEnabled: true,
 });
 
 // SNS notification
-const topic = new sns.Topic(stack, 'SecurityAlerts');
+const topic = new sns.Topic(stack, "SecurityAlerts");
 alarm.addAlarmAction(new actions.SnsAction(topic));
 ```
 
 **Alerts to implement:**
+
 - ✅ Failed authentication attempts (brute force detection)
 - ✅ Access denied events (permission issues)
 - ✅ PHI deletion events (rare, should be reviewed)
@@ -899,31 +913,37 @@ alarm.addAlarmAction(new actions.SnsAction(topic));
 ## Common Mistakes & How to Avoid Them
 
 ### ❌ Mistake 1: Logging PHI Content
+
 **Problem:** Audit logs contain actual PHI (names, diagnoses, SSN)
 **HIPAA Violation:** Logs are not encrypted/protected like primary PHI storage
 **Solution:** Only log record IDs and metadata, never PHI content
 
 ### ❌ Mistake 2: Mutable Logs
+
 **Problem:** Application can modify or delete audit logs
 **HIPAA Violation:** § 164.312(b) requires immutable audit trails
 **Solution:** Write-only permissions for application, use S3 Object Lock
 
 ### ❌ Mistake 3: Insufficient Retention
+
 **Problem:** Logs deleted after 90 days or 1 year
 **HIPAA Violation:** § 164.316(b)(2)(i) requires 6-year retention
 **Solution:** CloudWatch 6-year retention + S3 Glacier archival
 
 ### ❌ Mistake 4: Not Logging Failed Attempts
+
 **Problem:** Only successful PHI access is logged
 **HIPAA Risk:** Miss potential security incidents
 **Solution:** Log both success AND failure, especially access denials
 
 ### ❌ Mistake 5: No Log Monitoring
+
 **Problem:** Logs generated but never reviewed
 **HIPAA Risk:** Breaches go undetected for months
 **Solution:** Automated alerts + weekly manual review
 
 ### ❌ Mistake 6: Generic Logging Only
+
 **Problem:** Only application error logs, no specific PHI access logs
 **HIPAA Violation:** Cannot demonstrate who accessed what PHI
 **Solution:** Dedicated audit log service for all PHI operations
@@ -935,30 +955,30 @@ alarm.addAlarmAction(new actions.SnsAction(topic));
 ### Unit Tests
 
 ```typescript
-describe('AuditLogService', () => {
-  it('should log PHI access', async () => {
+describe("AuditLogService", () => {
+  it("should log PHI access", async () => {
     await auditLogService.logPHIAccess(
-      'user-id',
+      "user-id",
       AuditAction.PHI_READ,
-      'patient',
-      'patient-id',
+      "patient",
+      "patient-id",
       mockRequest
     );
 
     const logs = await prisma.auditLog.findMany({
-      where: { userId: 'user-id' }
+      where: { userId: "user-id" },
     });
 
     expect(logs).toHaveLength(1);
-    expect(logs[0].action).toBe('PHI_READ');
+    expect(logs[0].action).toBe("PHI_READ");
   });
 
-  it('should not log PHI content', async () => {
+  it("should not log PHI content", async () => {
     await auditLogService.log({
       action: AuditAction.PHI_READ,
       details: {
-        patientName: 'John Doe'  // This should fail validation
-      }
+        patientName: "John Doe", // This should fail validation
+      },
     });
 
     // Should throw or sanitize
@@ -969,37 +989,37 @@ describe('AuditLogService', () => {
 ### Integration Tests
 
 ```typescript
-describe('Audit Logging E2E', () => {
-  it('should log when patient is accessed', async () => {
+describe("Audit Logging E2E", () => {
+  it("should log when patient is accessed", async () => {
     const response = await request(app.getHttpServer())
-      .get('/patients/test-patient-id')
-      .set('Authorization', `Bearer ${userToken}`)
+      .get("/patients/test-patient-id")
+      .set("Authorization", `Bearer ${userToken}`)
       .expect(200);
 
     // Verify audit log was created
     const logs = await prisma.auditLog.findMany({
       where: {
-        resource: 'patient',
-        resourceId: 'test-patient-id'
-      }
+        resource: "patient",
+        resourceId: "test-patient-id",
+      },
     });
 
     expect(logs).toHaveLength(1);
-    expect(logs[0].action).toBe('PHI_READ');
+    expect(logs[0].action).toBe("PHI_READ");
   });
 
-  it('should log failed access attempts', async () => {
+  it("should log failed access attempts", async () => {
     const response = await request(app.getHttpServer())
-      .get('/patients/unauthorized-patient')
-      .set('Authorization', `Bearer ${userToken}`)
+      .get("/patients/unauthorized-patient")
+      .set("Authorization", `Bearer ${userToken}`)
       .expect(403);
 
     // Verify failed attempt was logged
     const logs = await prisma.auditLog.findMany({
       where: {
-        status: 'failure',
-        action: 'ACCESS_DENIED'
-      }
+        status: "failure",
+        action: "ACCESS_DENIED",
+      },
     });
 
     expect(logs.length).toBeGreaterThan(0);
@@ -1033,15 +1053,18 @@ Before deploying audit logging:
 ## Additional Resources
 
 **HIPAA Guidance:**
+
 - [HIPAA Audit Log Requirements](https://www.kiteworks.com/hipaa-compliance/hipaa-audit-log-requirements/)
 - [HIPAA Retention Requirements](https://www.hipaajournal.com/hipaa-retention-requirements/)
 - [Audit Trail Requirements](https://compliancy-group.com/hipaa-audit-log-requirements/)
 
 **AWS Documentation:**
+
 - [CloudWatch Logs User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/)
 - [S3 Object Lock](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html)
 
 **Implementation:**
+
 - [Winston Logger](https://github.com/winstonjs/winston)
 - [NestJS Logging](https://docs.nestjs.com/techniques/logger)
 
@@ -1054,10 +1077,11 @@ Continue to the next section:
 **[→ Data Handling](04-data-handling.md)**
 
 Or explore related topics:
+
 - [Authentication](01-authentication.md) - Log auth events
 - [Backend Checklist](05-checklist.md) - Pre-deployment verification
 
 ---
 
-*Last Updated: November 2025*
-*Part of the HIPAA Compliance Handbook - Backend Playbook*
+_Last Updated: November 2025_
+_Part of the HIPAA Compliance Handbook - Backend Playbook_

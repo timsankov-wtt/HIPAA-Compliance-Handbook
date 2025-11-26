@@ -74,6 +74,10 @@ just_the_docs:
   search:
     button: true
 
+nav_enabled: true
+nav_sort: case_insensitive
+color_scheme: dark
+
 # Encoding
 encoding: utf-8
 

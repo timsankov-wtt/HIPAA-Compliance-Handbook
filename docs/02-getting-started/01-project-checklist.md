@@ -1,3 +1,10 @@
+---
+layout: default
+title: Project Checklist
+parent: Getting Started
+nav_order: 1
+---
+
 # Project Checklist
 
 > A practical guide for starting a HIPAA-compliant project from day one
@@ -40,16 +47,16 @@ START: Does your project handle any health information?
 
 **Common Scenarios:**
 
-| Scenario | HIPAA Required? |
-|----------|----------------|
-| Building patient portal for hospital | ✅ YES - Business Associate |
-| EHR/EMR system development | ✅ YES - Business Associate |
-| Telemedicine platform with patient records | ✅ YES - Covered Entity or BA |
-| Healthcare appointment scheduling app | ✅ YES - Business Associate |
-| Medical billing software | ✅ YES - Business Associate |
-| Fitness app (no medical records) | ❌ NO - Unless integrating with health data |
-| Anonymous health research (properly de-identified) | ❌ NO - If truly de-identified |
-| General wellness app (no PHI) | ❌ NO - But be careful about data collection |
+| Scenario                                           | HIPAA Required?                              |
+| -------------------------------------------------- | -------------------------------------------- |
+| Building patient portal for hospital               | ✅ YES - Business Associate                  |
+| EHR/EMR system development                         | ✅ YES - Business Associate                  |
+| Telemedicine platform with patient records         | ✅ YES - Covered Entity or BA                |
+| Healthcare appointment scheduling app              | ✅ YES - Business Associate                  |
+| Medical billing software                           | ✅ YES - Business Associate                  |
+| Fitness app (no medical records)                   | ❌ NO - Unless integrating with health data  |
+| Anonymous health research (properly de-identified) | ❌ NO - If truly de-identified               |
+| General wellness app (no PHI)                      | ❌ NO - But be careful about data collection |
 
 **⚠️ When in Doubt:** If you handle ANY information that could identify a patient combined with health information, assume HIPAA applies and consult with legal counsel.
 
@@ -73,7 +80,7 @@ Before writing a single line of code, complete these essential planning steps:
 
 - [ ] **Assign Privacy Officer** - Person responsible for privacy policies and procedures
 - [ ] **Assign Security Officer** - Person responsible for technical security measures
-  - *Note: Same person can serve both roles in small teams*
+  - _Note: Same person can serve both roles in small teams_
 - [ ] **Define team roles** - Who handles PHI? Who has access? Who audits?
 - [ ] **Plan HIPAA training** - All team members need compliance training
 - [ ] **Create incident response team** - Who responds to breaches or security events?
@@ -95,6 +102,7 @@ Before writing a single line of code, complete these essential planning steps:
 - [ ] **Document vendor compliance status** - Maintain registry of all BAAs
 
 **Key Vendors to Evaluate:**
+
 - Cloud infrastructure (AWS, Azure, GCP)
 - Email services (check HIPAA-compliant options)
 - SMS/notification services
@@ -238,6 +246,7 @@ Before writing a single line of code, complete these essential planning steps:
 ### Privacy Officer
 
 **Responsibilities:**
+
 - Develop and maintain privacy policies
 - Ensure patient rights are protected (access, amendment, accounting)
 - Oversee privacy training programs
@@ -246,6 +255,7 @@ Before writing a single line of code, complete these essential planning steps:
 - Coordinate with legal counsel on privacy matters
 
 **Technical Skills Needed:**
+
 - Understanding of HIPAA Privacy Rule
 - Policy documentation
 - Risk assessment
@@ -258,6 +268,7 @@ Before writing a single line of code, complete these essential planning steps:
 ### Security Officer
 
 **Responsibilities:**
+
 - Develop and maintain security policies
 - Conduct risk assessments and security audits
 - Oversee implementation of technical safeguards
@@ -266,6 +277,7 @@ Before writing a single line of code, complete these essential planning steps:
 - Coordinate with DevOps on infrastructure security
 
 **Technical Skills Needed:**
+
 - Understanding of HIPAA Security Rule
 - Infrastructure security (AWS, networking)
 - Encryption and key management
@@ -279,6 +291,7 @@ Before writing a single line of code, complete these essential planning steps:
 ### Developer Responsibilities
 
 **All Developers Must:**
+
 - Complete HIPAA training before accessing any systems
 - Follow secure coding practices
 - Never log PHI in application logs
@@ -288,6 +301,7 @@ Before writing a single line of code, complete these essential planning steps:
 - Participate in code reviews with security focus
 
 **Backend Developers:**
+
 - Implement authentication and authorization
 - Set up audit logging for all PHI access
 - Configure database encryption
@@ -295,6 +309,7 @@ Before writing a single line of code, complete these essential planning steps:
 - Implement data retention and deletion procedures
 
 **Frontend Developers:**
+
 - Implement secure data transmission
 - Prevent XSS and injection attacks
 - Handle authentication tokens securely
@@ -306,6 +321,7 @@ Before writing a single line of code, complete these essential planning steps:
 ### DevOps Responsibilities
 
 **Infrastructure:**
+
 - Configure HIPAA-compliant AWS environment
 - Enable encryption at rest and in transit
 - Implement network segmentation
@@ -313,6 +329,7 @@ Before writing a single line of code, complete these essential planning steps:
 - Manage IAM roles and policies
 
 **Operations:**
+
 - Maintain backup and disaster recovery
 - Perform regular security updates
 - Monitor system logs for anomalies
@@ -320,6 +337,7 @@ Before writing a single line of code, complete these essential planning steps:
 - Manage SSL/TLS certificates
 
 **Compliance:**
+
 - Maintain CloudTrail and CloudWatch logs
 - Configure AWS Config for compliance monitoring
 - Coordinate penetration testing
@@ -331,27 +349,27 @@ Before writing a single line of code, complete these essential planning steps:
 
 ### Small Team (3-5 developers)
 
-| Phase | Duration | Key Activities |
-|-------|----------|----------------|
-| **Planning** | 2-3 weeks | Risk assessment, vendor evaluation, architecture design |
-| **Infrastructure Setup** | 1-2 weeks | AWS account, BAAs, network configuration, encryption |
-| **Core Development** | 8-12 weeks | Application development with security controls |
-| **Security Implementation** | 3-4 weeks | Audit logging, MFA, RBAC, testing |
-| **Testing & Audit** | 2-3 weeks | Penetration testing, vulnerability scans, compliance review |
-| **Documentation** | 1-2 weeks | Policies, procedures, training materials |
-| **Total** | **17-26 weeks** | (4-6 months) |
+| Phase                       | Duration        | Key Activities                                              |
+| --------------------------- | --------------- | ----------------------------------------------------------- |
+| **Planning**                | 2-3 weeks       | Risk assessment, vendor evaluation, architecture design     |
+| **Infrastructure Setup**    | 1-2 weeks       | AWS account, BAAs, network configuration, encryption        |
+| **Core Development**        | 8-12 weeks      | Application development with security controls              |
+| **Security Implementation** | 3-4 weeks       | Audit logging, MFA, RBAC, testing                           |
+| **Testing & Audit**         | 2-3 weeks       | Penetration testing, vulnerability scans, compliance review |
+| **Documentation**           | 1-2 weeks       | Policies, procedures, training materials                    |
+| **Total**                   | **17-26 weeks** | (4-6 months)                                                |
 
 **Note:** This assumes team members have some HIPAA knowledge. Add 2-4 weeks for training if starting from scratch.
 
 ### Medium Team (6-15 developers)
 
-| Phase | Duration |
-|-------|----------|
-| Planning | 3-4 weeks |
-| Setup & Development | 12-16 weeks |
-| Security & Testing | 4-6 weeks |
-| Documentation & Training | 2-3 weeks |
-| **Total** | **21-29 weeks** (5-7 months) |
+| Phase                    | Duration                     |
+| ------------------------ | ---------------------------- |
+| Planning                 | 3-4 weeks                    |
+| Setup & Development      | 12-16 weeks                  |
+| Security & Testing       | 4-6 weeks                    |
+| Documentation & Training | 2-3 weeks                    |
+| **Total**                | **21-29 weeks** (5-7 months) |
 
 ### Large Team (15+ developers)
 
@@ -383,6 +401,7 @@ Before writing a single line of code, complete these essential planning steps:
 **Solution:** Get quotes for ALL services during planning phase
 
 **Examples:**
+
 - Twilio HIPAA: $10,000+ setup fee
 - SendGrid: NOT HIPAA-compliant
 - Standard monitoring vs HIPAA monitoring: Often 3-5x cost difference
@@ -457,14 +476,16 @@ Now that you have your project checklist:
 ## Additional Resources
 
 **Planning Tools:**
+
 - [HHS Security Risk Assessment Tool](https://www.healthit.gov/topic/privacy-security-and-hipaa/security-risk-assessment-tool)
 - [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
 
 **Templates:**
+
 - Sample Risk Assessment: See [Risk Assessment Guide](03-risk-assessment.md)
 - Sample BAA: [HHS Model BAA](https://www.hhs.gov/hipaa/for-professionals/covered-entities/sample-business-associate-agreement-provisions/index.html)
 
 ---
 
-*Last Updated: November 2025*
-*Next: [BAA Requirements →](02-baa-requirements.md)*
+_Last Updated: November 2025_
+_Next: [BAA Requirements →](02-baa-requirements.md)_

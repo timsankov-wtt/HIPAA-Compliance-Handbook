@@ -1,3 +1,10 @@
+---
+layout: default
+title: Data Validation & Sanitization
+parent: Frontend Playbook
+nav_order: 2
+---
+
 # Data Validation & Sanitization
 
 > Frontend patterns to prevent injection and data exposure before it reaches the backend

@@ -1,3 +1,10 @@
+---
+layout: default
+title: Authentication & Authorization
+parent: Backend Playbook
+nav_order: 2
+---
+
 # Authentication & Authorization
 
 > Secure user authentication and role-based access control for HIPAA compliance
@@ -19,13 +26,16 @@ As of the 2025 HIPAA Security Rule updates, **Multi-Factor Authentication (MFA) 
 **Required Implementation Specifications:**
 
 1. **Unique User Identification (§ 164.312(a)(2)(i))**
+
    - Assign a unique name and/or number for identifying and tracking user identity
    - No shared accounts or generic logins
 
 2. **Emergency Access Procedure (§ 164.312(a)(2)(ii))**
+
    - Establish procedures for obtaining necessary ePHI during an emergency
 
 3. **Automatic Logoff (§ 164.312(a)(2)(iii))**
+
    - Implement electronic procedures that terminate an electronic session after a predetermined time of inactivity
 
 4. **Encryption and Decryption (§ 164.312(a)(2)(iv))**
@@ -60,6 +70,7 @@ Authentication must use at least **two of three** factor types:
 ### Implementation Options
 
 **TOTP (Time-Based One-Time Password)** ✅ Recommended
+
 - Apps: Google Authenticator, Authy, Microsoft Authenticator
 - Industry standard, widely supported
 - Works offline
@@ -100,17 +111,20 @@ async verifyTOTP(userId: string, token: string): Promise<boolean> {
 ```
 
 **SMS/Email Codes** ⚠️ Use with Caution
+
 - Vulnerable to SIM swapping and phishing
 - HIPAA-compliant provider required (Twilio expensive ~$10K+)
 - Not recommended as sole MFA method
 
 **Hardware Tokens (FIDO2/WebAuthn)** ✅ Most Secure
+
 - YubiKey, hardware security keys
 - Phishing-resistant
 - Higher upfront cost
 - Best for high-privilege accounts
 
 **Biometric Authentication** ✅ Approved
+
 - 2025 NPRM recognizes behavioral biometrics
 - Fingerprint, face recognition
 - Often device-dependent (mobile apps)
@@ -147,16 +161,19 @@ HIPAA does not mandate specific password requirements but refers to **NIST Speci
 ### Minimum Requirements
 
 **Password Length:**
+
 - **Minimum:** 8 characters (NIST baseline)
 - **Recommended:** 12+ characters for stronger security
 - **Maximum:** Allow up to 64 characters for passphrases
 
 **Password Complexity:**
+
 - Mix of uppercase, lowercase, numbers, and special characters
 - **Important:** NIST now emphasizes **length over complexity**
 - Encourage passphrases (e.g., "CorrectHorseBatteryStaple") over complex short passwords
 
 **What to Avoid:**
+
 - ❌ Dictionary words
 - ❌ Common passwords (123456, password, admin)
 - ❌ User's name or username
@@ -188,6 +205,7 @@ async verifyPassword(password: string, hash: string): Promise<boolean> {
 ```
 
 **Best Practices:**
+
 - Use **bcrypt**, **argon2**, or **PBKDF2** (not MD5 or SHA-1!)
 - Salt rounds: Minimum 10, recommended 12+
 - Never log passwords, even in error messages
@@ -196,6 +214,7 @@ async verifyPassword(password: string, hash: string): Promise<boolean> {
 ### Password Change Policy
 
 **NIST Current Guidance:**
+
 - ❌ **Do NOT** require periodic password changes (e.g., every 90 days)
 - ✅ **Do** require password change when:
   - Evidence of compromise
@@ -261,24 +280,24 @@ validatePassword(password: string, username: string): ValidationResult {
 
 ```typescript
 enum Role {
-  PATIENT = 'patient',               // Access own records only
-  PROVIDER = 'provider',              // Access assigned patients
-  NURSE = 'nurse',                    // Access patients in care
-  ADMIN = 'admin',                    // Administrative access
-  BILLING = 'billing',                // Billing information only
-  SUPPORT = 'support',                // Limited support access
-  SUPER_ADMIN = 'super_admin'         // Full system access
+  PATIENT = "patient", // Access own records only
+  PROVIDER = "provider", // Access assigned patients
+  NURSE = "nurse", // Access patients in care
+  ADMIN = "admin", // Administrative access
+  BILLING = "billing", // Billing information only
+  SUPPORT = "support", // Limited support access
+  SUPER_ADMIN = "super_admin", // Full system access
 }
 
 enum Permission {
-  PHI_READ = 'phi:read',
-  PHI_WRITE = 'phi:write',
-  PHI_DELETE = 'phi:delete',
-  PATIENT_CREATE = 'patient:create',
-  APPOINTMENT_MANAGE = 'appointment:manage',
-  BILLING_VIEW = 'billing:view',
-  AUDIT_LOG_VIEW = 'audit:view',
-  USER_MANAGE = 'user:manage'
+  PHI_READ = "phi:read",
+  PHI_WRITE = "phi:write",
+  PHI_DELETE = "phi:delete",
+  PATIENT_CREATE = "patient:create",
+  APPOINTMENT_MANAGE = "appointment:manage",
+  BILLING_VIEW = "billing:view",
+  AUDIT_LOG_VIEW = "audit:view",
+  USER_MANAGE = "user:manage",
 }
 ```
 
@@ -287,26 +306,20 @@ enum Permission {
 ```typescript
 const ROLE_PERMISSIONS = {
   [Role.PATIENT]: [
-    Permission.PHI_READ  // Own records only
+    Permission.PHI_READ, // Own records only
   ],
   [Role.PROVIDER]: [
     Permission.PHI_READ,
     Permission.PHI_WRITE,
-    Permission.APPOINTMENT_MANAGE
+    Permission.APPOINTMENT_MANAGE,
   ],
-  [Role.NURSE]: [
-    Permission.PHI_READ,
-    Permission.PHI_WRITE
-  ],
+  [Role.NURSE]: [Permission.PHI_READ, Permission.PHI_WRITE],
   [Role.BILLING]: [
     Permission.BILLING_VIEW,
-    Permission.PHI_READ  // Limited to billing info
+    Permission.PHI_READ, // Limited to billing info
   ],
-  [Role.ADMIN]: [
-    Permission.USER_MANAGE,
-    Permission.AUDIT_LOG_VIEW
-  ],
-  [Role.SUPER_ADMIN]: Object.values(Permission)
+  [Role.ADMIN]: [Permission.USER_MANAGE, Permission.AUDIT_LOG_VIEW],
+  [Role.SUPER_ADMIN]: Object.values(Permission),
 };
 ```
 
@@ -315,8 +328,8 @@ const ROLE_PERMISSIONS = {
 **Guard for Role-Based Access:**
 
 ```typescript
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
 
 /**
  * RBAC Guard - Enforces role-based access control
@@ -329,7 +342,7 @@ export class RolesGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     // Get required roles from @Roles() decorator
     const requiredRoles = this.reflector.get<Role[]>(
-      'roles',
+      "roles",
       context.getHandler()
     );
 
@@ -345,7 +358,7 @@ export class RolesGuard implements CanActivate {
     }
 
     // Check if user has any of the required roles
-    const hasRole = requiredRoles.some(role => user.roles?.includes(role));
+    const hasRole = requiredRoles.some((role) => user.roles?.includes(role));
 
     if (!hasRole) {
       // Log unauthorized access attempt
@@ -360,41 +373,40 @@ export class RolesGuard implements CanActivate {
 **Custom Decorator:**
 
 ```typescript
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata } from "@nestjs/common";
 
 /**
  * Roles decorator - Specify required roles for endpoint
  * Usage: @Roles(Role.PROVIDER, Role.NURSE)
  */
-export const Roles = (...roles: Role[]) => SetMetadata('roles', roles);
+export const Roles = (...roles: Role[]) => SetMetadata("roles", roles);
 ```
 
 **Controller Usage:**
 
 ```typescript
-@Controller('patients')
+@Controller("patients")
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PatientsController {
-
   /**
    * Get patient details
    * Only providers and nurses can access
    */
-  @Get(':id')
+  @Get(":id")
   @Roles(Role.PROVIDER, Role.NURSE)
-  async getPatient(@Param('id') id: string, @User() user: UserEntity) {
+  async getPatient(@Param("id") id: string, @User() user: UserEntity) {
     // Additional check: Can this user access THIS patient?
-    if (!await this.canAccessPatient(user.id, id)) {
-      throw new ForbiddenException('Cannot access this patient');
+    if (!(await this.canAccessPatient(user.id, id))) {
+      throw new ForbiddenException("Cannot access this patient");
     }
 
     // Log PHI access
     await this.auditLog.log({
       userId: user.id,
-      action: 'PHI_READ',
-      resource: 'patient',
+      action: "PHI_READ",
+      resource: "patient",
       resourceId: id,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return this.patientsService.findOne(id);
@@ -404,16 +416,16 @@ export class PatientsController {
    * Delete patient record
    * Only providers can delete (with hard delete requirement!)
    */
-  @Delete(':id')
+  @Delete(":id")
   @Roles(Role.PROVIDER, Role.SUPER_ADMIN)
-  async deletePatient(@Param('id') id: string, @User() user: UserEntity) {
+  async deletePatient(@Param("id") id: string, @User() user: UserEntity) {
     // Log before deletion
     await this.auditLog.log({
       userId: user.id,
-      action: 'PHI_DELETE',
-      resource: 'patient',
+      action: "PHI_DELETE",
+      resource: "patient",
       resourceId: id,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Hard delete - no soft deletes allowed for PHI!
@@ -434,6 +446,7 @@ Sessions must terminate after a predetermined period of inactivity.
 ### Best Practices
 
 **Session Timeout:**
+
 - **Recommended:** 15-30 minutes of inactivity
 - **Maximum:** No more than 60 minutes for systems with PHI
 - **High-risk areas:** 5-10 minutes (e.g., billing, admin panels)
@@ -472,6 +485,7 @@ generateRefreshToken(user: UserEntity): string {
 ```
 
 **Session Storage:**
+
 - **Access tokens:** Short-lived (15-30 min), stored in memory or httpOnly cookies
 - **Refresh tokens:** Longer-lived (7 days max), stored in httpOnly, secure cookies
 - **Never:** Store tokens in localStorage (XSS vulnerability)
@@ -506,7 +520,7 @@ export class ActivityMiddleware implements NestMiddleware {
       await this.cacheService.set(
         `user:${req.user.id}:lastActivity`,
         Date.now(),
-        { ttl: 1800 }  // 30 min TTL
+        { ttl: 1800 } // 30 min TTL
       );
     }
     next();
@@ -521,9 +535,9 @@ export class ActivityMiddleware implements NestMiddleware {
 ### NestJS Passport JWT
 
 ```typescript
-import { Injectable } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Injectable } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { ExtractJwt, Strategy } from "passport-jwt";
 
 /**
  * JWT Strategy for validating access tokens
@@ -533,8 +547,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private usersService: UsersService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,  // Enforce expiration
-      secretOrKey: process.env.JWT_SECRET
+      ignoreExpiration: false, // Enforce expiration
+      secretOrKey: process.env.JWT_SECRET,
     });
   }
 
@@ -544,20 +558,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     // Verify MFA was completed for this session
     if (!payload.mfaVerified) {
-      throw new UnauthorizedException('MFA required');
+      throw new UnauthorizedException("MFA required");
     }
 
     // Fetch current user data (in case roles changed)
     const user = await this.usersService.findById(payload.sub);
 
     if (!user || !user.isActive) {
-      throw new UnauthorizedException('User not found or inactive');
+      throw new UnauthorizedException("User not found or inactive");
     }
 
     return {
       id: user.id,
       username: user.username,
-      roles: user.roles
+      roles: user.roles,
     };
   }
 }
@@ -756,36 +770,43 @@ model UserRole {
 ## Common Mistakes & How to Avoid Them
 
 ### ❌ Mistake 1: Shared Accounts
+
 **Problem:** Multiple users sharing one login (e.g., "admin", "nurse_station")
 **HIPAA Violation:** § 164.312(a)(2)(i) Unique User Identification
 **Solution:** Each person must have their own unique account
 
 ### ❌ Mistake 2: No MFA
+
 **Problem:** Only password authentication
 **HIPAA Violation:** 2025 mandate requires MFA
 **Solution:** Implement TOTP or hardware token MFA immediately
 
 ### ❌ Mistake 3: Weak Password Storage
+
 **Problem:** Storing passwords with MD5 or plain text
 **HIPAA Violation:** § 164.312(a)(2)(iv) Encryption
 **Solution:** Use bcrypt with salt rounds 12+
 
 ### ❌ Mistake 4: No Session Timeout
+
 **Problem:** Sessions never expire
 **HIPAA Violation:** § 164.312(a)(2)(iii) Automatic Logoff
 **Solution:** 30-minute JWT expiration, enforce on backend
 
 ### ❌ Mistake 5: Role Checks Only in Frontend
+
 **Problem:** Authorization only validated in React/UI
 **HIPAA Violation:** Can be bypassed with API calls
 **Solution:** Always enforce RBAC on backend with Guards
 
 ### ❌ Mistake 6: Not Logging Auth Events
+
 **Problem:** No audit trail of login attempts
 **HIPAA Violation:** § 164.312(b) Audit Controls
 **Solution:** Log all authentication events (success and failure)
 
 ### ❌ Mistake 7: Storing Tokens in localStorage
+
 **Problem:** Tokens accessible via JavaScript (XSS vulnerability)
 **Security Risk:** High
 **Solution:** Use httpOnly, secure cookies for refresh tokens
@@ -797,30 +818,30 @@ model UserRole {
 ### Unit Tests
 
 ```typescript
-describe('AuthService', () => {
-  it('should hash passwords with bcrypt', async () => {
-    const password = 'SecurePass123!';
+describe("AuthService", () => {
+  it("should hash passwords with bcrypt", async () => {
+    const password = "SecurePass123!";
     const hash = await authService.hashPassword(password);
 
     expect(hash).not.toEqual(password);
     expect(await bcrypt.compare(password, hash)).toBe(true);
   });
 
-  it('should enforce MFA for all users', async () => {
+  it("should enforce MFA for all users", async () => {
     const user = await usersService.create({
-      username: 'testuser',
-      password: 'SecurePass123!'
+      username: "testuser",
+      password: "SecurePass123!",
     });
 
-    expect(user.mfaEnabled).toBe(true);  // Should be mandatory
+    expect(user.mfaEnabled).toBe(true); // Should be mandatory
   });
 
-  it('should expire JWT after 30 minutes', () => {
+  it("should expire JWT after 30 minutes", () => {
     const token = authService.generateToken(user);
     const decoded = jwtService.decode(token);
 
     const expiresIn = decoded.exp - decoded.iat;
-    expect(expiresIn).toBeLessThanOrEqual(1800);  // 30 min = 1800 sec
+    expect(expiresIn).toBeLessThanOrEqual(1800); // 30 min = 1800 sec
   });
 });
 ```
@@ -828,28 +849,28 @@ describe('AuthService', () => {
 ### Integration Tests
 
 ```typescript
-describe('Authentication E2E', () => {
-  it('should require MFA after password verification', async () => {
+describe("Authentication E2E", () => {
+  it("should require MFA after password verification", async () => {
     const response = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ username: 'testuser', password: 'SecurePass123!' });
+      .post("/auth/login")
+      .send({ username: "testuser", password: "SecurePass123!" });
 
     expect(response.body.requiresMFA).toBe(true);
     expect(response.body.mfaToken).toBeDefined();
   });
 
-  it('should reject requests without valid JWT', async () => {
+  it("should reject requests without valid JWT", async () => {
     const response = await request(app.getHttpServer())
-      .get('/patients/123')
+      .get("/patients/123")
       .expect(401);
   });
 
-  it('should enforce role-based access', async () => {
-    const billingUserToken = await getToken('billing_user');
+  it("should enforce role-based access", async () => {
+    const billingUserToken = await getToken("billing_user");
 
     const response = await request(app.getHttpServer())
-      .delete('/patients/123')  // Only providers can delete
-      .set('Authorization', `Bearer ${billingUserToken}`)
+      .delete("/patients/123") // Only providers can delete
+      .set("Authorization", `Bearer ${billingUserToken}`)
       .expect(403);
   });
 });
@@ -882,14 +903,17 @@ Before deploying authentication system:
 ## Additional Resources
 
 **HIPAA Guidance:**
+
 - [HHS Security Rule § 164.312](https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html)
 - [2025 HIPAA MFA Requirements](https://www.strongdm.com/blog/hipaa-mfa-requirements)
 
 **NIST Standards:**
+
 - [NIST 800-63B - Digital Identity Guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html)
 - [NIST Password Guidelines](https://www.hipaasecurenow.com/nist-guidelines-for-strong-passwords/)
 
 **Implementation:**
+
 - [NestJS Authentication Documentation](https://docs.nestjs.com/security/authentication)
 - [Passport.js Strategies](http://www.passportjs.org/)
 
@@ -902,10 +926,11 @@ Continue to the next section:
 **[→ Encryption](02-encryption.md)**
 
 Or explore related topics:
+
 - [Audit Logging](03-audit-logging.md) - Log authentication events
 - [Backend Checklist](05-checklist.md) - Pre-deployment verification
 
 ---
 
-*Last Updated: November 2025*
-*Part of the HIPAA Compliance Handbook - Backend Playbook*
+_Last Updated: November 2025_
+_Part of the HIPAA Compliance Handbook - Backend Playbook_

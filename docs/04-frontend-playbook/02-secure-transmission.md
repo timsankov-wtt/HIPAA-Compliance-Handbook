@@ -1,3 +1,10 @@
+---
+layout: default
+title: Secure Transmission
+parent: Frontend Playbook
+nav_order: 3
+---
+
 # Secure Transmission
 
 > Keeping PHI safe as it travels between frontend and backend

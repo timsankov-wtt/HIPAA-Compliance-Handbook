@@ -1,3 +1,10 @@
+---
+layout: default
+title: UI Security & Privacy UX
+parent: Frontend Playbook
+nav_order: 4
+---
+
 # UI Security & Privacy UX
 
 > Designing user interfaces that protect PHI while staying usable

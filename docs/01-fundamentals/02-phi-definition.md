@@ -1,3 +1,10 @@
+---
+layout: default
+title: Understanding Protected Health Information (PHI)
+parent: HIPAA Fundamentals
+nav_order: 2
+---
+
 # Understanding Protected Health Information (PHI)
 
 > A comprehensive guide to identifying and handling PHI in your applications

@@ -1,3 +1,10 @@
+---
+layout: default
+title: Overview
+parent: Backend Playbook
+nav_order: 1
+---
+
 # Backend Playbook
 
 > Comprehensive guide for backend developers building HIPAA-compliant systems with NestJS and PostgreSQL
@@ -17,23 +24,27 @@ This playbook provides practical guidance for implementing HIPAA technical safeg
 When building HIPAA-compliant backend systems, you are responsible for:
 
 ### Data Protection
+
 - Implementing encryption for all PHI at rest and in transit
 - Ensuring secure database configurations
 - Managing encryption keys properly
 
 ### Access Control
+
 - Authenticating users securely
 - Enforcing role-based access control (RBAC)
 - Implementing multi-factor authentication (MFA)
 - Managing session lifecycles
 
 ### Audit & Monitoring
+
 - Logging all PHI access events
 - Creating immutable audit trails
 - Ensuring logs don't contain PHI themselves
 - Implementing real-time security monitoring
 
 ### Data Lifecycle
+
 - Properly handling PHI throughout its lifecycle
 - Implementing secure deletion (no soft deletes!)
 - Managing data retention policies
@@ -46,24 +57,29 @@ When building HIPAA-compliant backend systems, you are responsible for:
 HIPAA Security Rule requires three types of safeguards. Backend teams primarily focus on **Technical Safeguards**:
 
 ### 1. Access Control (§164.312(a)(1))
+
 - **Unique User Identification** - Each user has a unique identifier
 - **Emergency Access** - Procedures for accessing ePHI during emergencies
 - **Automatic Logoff** - Sessions terminate after inactivity
 - **Encryption & Decryption** - Mechanisms to encrypt/decrypt ePHI
 
 ### 2. Audit Controls (§164.312(b))
+
 - Record and examine activity in systems containing ePHI
 - Who accessed what, when, and from where
 
 ### 3. Integrity (§164.312(c))
+
 - Ensure ePHI is not improperly altered or destroyed
 - Mechanisms to corroborate that ePHI hasn't been tampered with
 
 ### 4. Person or Entity Authentication (§164.312(d))
+
 - Verify that a person or entity is who they claim to be
 - MFA now required for remote access (2025 update)
 
 ### 5. Transmission Security (§164.312(e))
+
 - Protect ePHI transmitted over electronic networks
 - Encryption mandatory (2025 update)
 
@@ -108,7 +124,7 @@ When something goes wrong, default to denying access:
 
 ```javascript
 // ✅ Good: Explicit permission check
-if (user.hasPermission('PHI_READ') && user.canAccess(patientId)) {
+if (user.hasPermission("PHI_READ") && user.canAccess(patientId)) {
   return patientData;
 }
 throw new ForbiddenException(); // Fail secure
@@ -172,27 +188,35 @@ Our recommended architecture for HIPAA-compliant backends:
 ## Key Principles
 
 ### 1. Never Trust Input
+
 Always validate and sanitize all input, even from authenticated users.
 
 ### 2. Encrypt Everything
+
 All PHI must be encrypted at rest and in transit. No exceptions (2025 requirement).
 
 ### 3. Log All Access
+
 Every time PHI is accessed, create an audit log entry. But never log PHI itself!
 
 ### 4. Implement RBAC
+
 Users should only see data they're authorized to access based on their role.
 
 ### 5. Fail Securely
+
 When errors occur, don't expose sensitive information. Log details securely, show generic errors to users.
 
 ### 6. Use Parameterized Queries
+
 Always use Prisma/ORM or parameterized queries. Never concatenate user input into SQL.
 
 ### 7. Secure Session Management
+
 Implement proper session timeouts, secure token storage, and automatic logoff.
 
 ### 8. Hard Delete Only
+
 No soft deletes for patient data - HIPAA requires actual deletion when requested.
 
 ---
@@ -202,30 +226,35 @@ No soft deletes for patient data - HIPAA requires actual deletion when requested
 This playbook is organized into focused sections:
 
 ### [1. Authentication & Authorization](01-authentication.md)
+
 - JWT strategies and MFA implementation
 - Role-Based Access Control (RBAC)
 - Password policies and session management
 - NestJS Guards patterns
 
 ### [2. Encryption](02-encryption.md)
+
 - Data at rest encryption (PostgreSQL/RDS)
 - Data in transit encryption (TLS 1.2+)
 - AWS KMS integration and key management
 - Why column-level encryption is often unnecessary
 
 ### [3. Audit Logging](03-audit-logging.md)
+
 - What to log and what NOT to log
 - Structured logging with NestJS
 - CloudWatch Logs integration
 - Log retention and integrity
 
 ### [4. Data Handling](04-data-handling.md)
+
 - Data minimization principle
 - Hard delete requirements (no soft deletes!)
 - Data retention and backup policies
 - PostgreSQL best practices
 
 ### [5. Backend Checklist](05-checklist.md)
+
 - Complete pre-deployment checklist
 - Critical, Important, and Recommended items
 - Validation criteria for each requirement
@@ -254,23 +283,28 @@ Before deploying any backend code that handles PHI:
 This playbook provides specific guidance for:
 
 **Backend Framework:**
+
 - NestJS (TypeScript)
 - Express.js underlying
 
 **Database:**
+
 - PostgreSQL (AWS RDS)
 - Prisma ORM
 
 **Authentication:**
+
 - JWT (JSON Web Tokens)
 - Passport.js strategies
 - AWS Cognito (optional)
 
 **Logging:**
+
 - Winston or Pino (structured logging)
 - AWS CloudWatch Logs
 
 **Encryption:**
+
 - AWS KMS (key management)
 - TLS 1.2+ (in transit)
 - AES-256 (at rest)
@@ -282,26 +316,32 @@ This playbook provides specific guidance for:
 Be especially vigilant about these common security issues:
 
 ### SQL Injection
+
 **Risk:** Attackers manipulate queries to access unauthorized data
 **Prevention:** Always use Prisma ORM or parameterized queries
 
 ### Broken Authentication
+
 **Risk:** Weak passwords, missing MFA, poor session management
 **Prevention:** Implement strong auth, MFA, and session timeouts
 
 ### Sensitive Data Exposure
+
 **Risk:** PHI in logs, error messages, or unencrypted storage
 **Prevention:** Sanitize logs, encrypt everything, generic error messages
 
 ### Broken Access Control
+
 **Risk:** Users accessing data they shouldn't
 **Prevention:** Implement RBAC, test authorization thoroughly
 
 ### Security Misconfiguration
+
 **Risk:** Default passwords, unnecessary services, verbose errors
 **Prevention:** Security hardening, least privilege, configuration reviews
 
 ### Insufficient Logging & Monitoring
+
 **Risk:** Breaches go undetected for months
 **Prevention:** Comprehensive audit logging, real-time monitoring
 
@@ -310,24 +350,28 @@ Be especially vigilant about these common security issues:
 ## Development Workflow
 
 ### 1. Before Writing Code
+
 - Review this playbook's relevant sections
 - Understand what data is PHI
 - Plan your audit logging strategy
 - Design RBAC model
 
 ### 2. During Development
+
 - Use TypeScript for type safety
 - Write security-focused unit tests
 - Test authorization edge cases
 - Never commit secrets to git
 
 ### 3. Before Deployment
+
 - Complete [Backend Checklist](05-checklist.md)
 - Code review with security focus
 - Test with production-like data (de-identified)
 - Verify audit logs are working
 
 ### 4. After Deployment
+
 - Monitor audit logs daily
 - Review access patterns weekly
 - Update dependencies monthly
@@ -338,15 +382,18 @@ Be especially vigilant about these common security issues:
 ## Getting Help
 
 **Questions about implementation?**
+
 - Refer to specific sections in this playbook
 - Check [Code Examples](../06-appendices/code-examples.md)
 - Review [AWS Services Guide](../06-appendices/aws-services.md)
 
 **Need to evaluate a third-party service?**
+
 - See [Third-Party Vendors](../02-getting-started/04-third-party-vendors.md)
 - Review [BAA Requirements](../02-getting-started/02-baa-requirements.md)
 
 **Security concerns?**
+
 - Consult your Privacy/Security Officer
 - Review [Risk Assessment](../02-getting-started/03-risk-assessment.md)
 
@@ -359,6 +406,7 @@ Start with the first section and work through each topic:
 1. **[Authentication & Authorization →](01-authentication.md)**
 
 Or jump to a specific topic:
+
 - [Encryption](02-encryption.md)
 - [Audit Logging](03-audit-logging.md)
 - [Data Handling](04-data-handling.md)
@@ -366,5 +414,5 @@ Or jump to a specific topic:
 
 ---
 
-*Last Updated: November 2025*
-*Part of the HIPAA Compliance Handbook*
+_Last Updated: November 2025_
+_Part of the HIPAA Compliance Handbook_

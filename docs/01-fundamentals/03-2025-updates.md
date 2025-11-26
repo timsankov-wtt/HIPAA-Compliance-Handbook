@@ -1,3 +1,10 @@
+---
+layout: default
+title: 2025 HIPAA Security Rule Updates
+parent: HIPAA Fundamentals
+nav_order: 3
+---
+
 # 2025 HIPAA Security Rule Updates
 
 ## Overview of 2025 Changes
