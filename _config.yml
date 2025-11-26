@@ -7,7 +7,7 @@ baseurl: "/HIPAA-Compliance-Handbook"
 url: "https://timsankov-wtt.github.io"
 
 # Theme
-theme: minima
+remote_theme: just-the-docs/just-the-docs
 
 # Build settings
 markdown: kramdown
@@ -23,9 +23,9 @@ kramdown:
 # Plugins
 plugins:
   - jekyll-feed
-  - jekyll-seo-tag
   - jekyll-sitemap
   - jekyll-relative-links
+  - jekyll-remote-theme
 
 # Jekyll Relative Links
 relative_links:
@@ -50,23 +50,6 @@ defaults:
     values:
       layout: "default"
 
-# Navigation (for themes that support it)
-navigation:
-  - title: Home
-    url: /
-  - title: Fundamentals
-    url: /docs/01-fundamentals/
-  - title: Getting Started
-    url: /docs/02-getting-started/
-  - title: Backend
-    url: /docs/03-backend-playbook/
-  - title: Frontend
-    url: /docs/04-frontend-playbook/
-  - title: DevOps
-    url: /docs/05-devops-playbook/
-  - title: Appendices
-    url: /docs/06-appendices/
-
 # Exclude from processing
 exclude:
   - Gemfile
@@ -85,6 +68,12 @@ exclude:
 include:
   - _pages
 
+# Just the Docs configuration
+just_the_docs:
+  search_enabled: true
+  search:
+    button: true
+
 # Encoding
 encoding: utf-8
 
@@ -97,17 +86,6 @@ permalink: pretty
 # Pagination (if needed)
 # paginate: 10
 # paginate_path: "/page:num/"
-
-# Search (if supported by theme)
-search_enabled: true
-search:
-  heading_level: 2
-  previews: 3
-  preview_words_before: 5
-  preview_words_after: 10
-  tokenizer_separator: /[\s/]+/
-  rel_url: true
-  button: false
 
 # Footer
 footer_content: "HIPAA Compliance Handbook | Internal Documentation | Last Updated: November 2025"
