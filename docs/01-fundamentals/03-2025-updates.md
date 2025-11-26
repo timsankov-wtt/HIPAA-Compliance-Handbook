@@ -7,117 +7,75 @@ nav_order: 3
 
 # 2025 HIPAA Security Rule Updates
 
-## Overview of 2025 Changes
+## Overview
 
-The HIPAA Security Rule has undergone significant updates in 2025, with the most substantial changes taking effect on January 1, 2025. These updates reflect the evolving cybersecurity landscape and aim to strengthen protections for electronic Protected Health Information (ePHI).
+In January 2025, HHS published a Notice of Proposed Rulemaking (NPRM) for the HIPAA Security Rule - the first major update in nearly 20 years. The final rule is expected late 2025 or early 2026. These proposed changes transform cybersecurity best practices from recommended to mandatory requirements.
 
-## Key Changes
+**Status**: Proposed rule (comment period closed March 2025). Organizations should prepare for implementation within 12 months of final rule publication.
+
+## Proposed Changes
 
 ### 1. Mandatory Encryption
 
-- **What Changed**: Encryption is now explicitly required for all ePHI at rest and in transit.
-- **Previous Rule**: Encryption was "addressable" (risk-based decision).
-- **Impact**: All systems handling ePHI must implement strong encryption.
-- **Implementation Deadline**: January 1, 2025
+- **Previous**: "Addressable" specification (optional if alternative controls used)
+- **Proposed**: Required for all ePHI at rest and in transit
+- **Approved Algorithms**:
+  - Data at rest: AES-256
+  - Data in transit: TLS 1.3
+  - Key exchanges: RSA-2048 (minimum)
 
 ### 2. Multi-Factor Authentication (MFA)
 
-- **New Requirement**: MFA is now mandatory for all remote access to ePHI.
-- **Scope**: Applies to all users, including employees, contractors, and business associates.
-- **Implementation Options**:
-  - Hardware tokens
-  - Authenticator apps
-  - Biometric verification
-  - SMS-based verification (with additional security controls)
+- **Scope**: All access to ePHI (not just remote access)
+- **Requirements**: At least two of three factors:
+  - Knowledge (password, PIN)
+  - Possession (token, smart card)
+  - Inherence (fingerprint, facial recognition)
+- **Limited exceptions** allowed (must be documented)
 
-### 3. Network Segmentation
+### 3. Removal of "Addressable" vs "Required" Distinction
 
-- **New Requirement**: Organizations must implement network segmentation to isolate ePHI from other network traffic.
-- **Purpose**: Limits the impact of potential breaches by containing them to specific network segments.
-- **Implementation Guidance**:
-  - Separate ePHI storage from general network traffic
-  - Implement proper access controls between segments
-  - Regular testing of segmentation effectiveness
+- All implementation specifications become required with limited, documented exceptions
+- Clarifies that specifications were never truly optional
+- Risk assessment required for any exceptions
 
-### 4. Removal of "Addressable" Specifications
+### 4. Asset Inventory
 
-- **What Changed**: The distinction between "required" and "addressable" specifications has been eliminated.
-- **Impact**: All security measures are now mandatory, with limited exceptions that must be documented.
-- **Documentation Requirements**:
-  - Risk assessment for any unimplemented controls
-  - Alternative security measures if a control cannot be implemented
-  - Timeline for implementing any deferred controls
+- Continuous, updated inventory of all assets that create, receive, maintain, or transmit ePHI
+- Remove unauthorized or extraneous software
 
-### 5. Annual Security Audits
+### 5. Regular Security Testing
 
-- **New Requirement**: Annual comprehensive security audits are now mandatory.
-- **Components**:
-  - Vulnerability scanning (quarterly)
-  - Penetration testing (annual)
-  - Security assessment against NIST 800-66r2 framework
-  - Documentation of findings and remediation plans
+- **Vulnerability Scanning**: Every 6 months (minimum)
+- **Penetration Testing**: Annually (minimum)
+- Documentation of findings and remediation required
 
-## Technical Implementation for Our Stack
+## Technical Implementation
 
 ### Backend (NestJS)
 
-- Implement encryption middleware for all API responses containing ePHI
-- Enforce MFA for all admin and privileged accounts
-- Add comprehensive audit logging for all ePHI access
-- Update authentication flows to support MFA requirements
+- Encryption middleware for all API responses with ePHI
+- MFA support in authentication flows
+- Comprehensive audit logging for ePHI access
+- Session management with MFA validation
 
 ### Database (PostgreSQL)
 
-- Enable Transparent Data Encryption (TDE)
-- Implement row-level security for ePHI tables
-- Encrypt database backups
-- Enable database activity monitoring
+- Transparent Data Encryption (TDE) or column-level encryption
+- Row-level security for ePHI tables
+- Encrypted backups with key rotation
+- Database activity monitoring and logging
 
 ### Infrastructure (AWS)
 
-- Implement AWS KMS for encryption key management
-- Configure AWS WAF and Network Firewall for network segmentation
-- Enable AWS Config and GuardDuty for continuous monitoring
-- Set up VPC endpoints for private connectivity
-
-## Compliance Timeline
-
-| Requirement                   | Implementation Deadline | Status  |
-| ----------------------------- | ----------------------- | ------- |
-| Encryption at rest/in-transit | January 1, 2025         | Pending |
-| MFA implementation            | January 1, 2025         | Pending |
-| Network segmentation          | June 30, 2025           | Pending |
-| First annual security audit   | December 31, 2025       | Pending |
-
-## Action Items for Development Teams
-
-1. **Immediate (Q1 2025)**
-
-   - Update security policies to reflect new requirements
-   - Begin implementing encryption for data at rest and in transit
-   - Start MFA rollout for all development and production environments
-
-2. **Mid-Year (Q2 2025)**
-
-   - Complete network segmentation implementation
-   - Conduct security awareness training for all team members
-   - Perform initial vulnerability assessment
-
-3. **Year-End (Q4 2025)**
-   - Complete first comprehensive security audit
-   - Document all security controls and configurations
-   - Submit compliance report to management
+- AWS KMS for encryption key management
+- TLS 1.3 for all data in transit
+- VPC segmentation and security groups
+- AWS Config and GuardDuty for compliance monitoring
+- Regular vulnerability scans and penetration tests
 
 ## Resources
 
-- [HHS HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html)
+- [HHS HIPAA Security Rule NPRM](https://www.hhs.gov/hipaa/for-professionals/security/hipaa-security-rule-nprm/factsheet/index.html)
 - [NIST SP 800-66r2](https://csrc.nist.gov/publications/detail/sp/800-66/rev-2/final)
 - [AWS HIPAA Compliance](https://aws.amazon.com/compliance/hipaa-compliance/)
-
-## Next Steps
-
-1. Review and update security policies
-2. Schedule training for all team members
-3. Begin implementing technical controls
-4. Document all compliance efforts
-5. Prepare for the first annual audit
