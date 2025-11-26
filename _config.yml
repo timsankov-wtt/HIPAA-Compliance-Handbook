@@ -3,8 +3,8 @@
 # Site settings
 title: HIPAA Compliance Handbook
 description: A practical guide for building HIPAA-compliant applications with NestJS, PostgreSQL, Next.js/React, and AWS
-baseurl: "/hipaa-handbook"
-url: "https://your-username.github.io"
+baseurl: "/HIPAA-Compliance-Handbook"
+url: "https://timsankov-wtt.github.io"
 
 # Theme
 theme: minima
