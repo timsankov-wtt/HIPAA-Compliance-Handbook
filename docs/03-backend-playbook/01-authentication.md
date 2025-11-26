@@ -77,36 +77,17 @@ Authentication must use at least **two of three** factor types:
 - Low cost
 
 ```javascript
-/**
- * Enable TOTP MFA for user
- * @param userId - Unique user identifier
- * @returns QR code and secret for user to scan
- */
-async enableTOTP(userId: string) {
-  const secret = speakeasy.generateSecret({ name: 'Healthcare App' });
-
-  // Store secret encrypted in database
-  await this.userService.updateMFASecret(userId, secret.base32);
-
-  // Return QR code for user to scan
-  return {
-    qrCode: secret.otpauth_url,
-    secret: secret.base32
-  };
+// Enable TOTP MFA
+async enableTOTP(userId) {
+  const secret = speakeasy.generateSecret()
+  await db.updateMFASecret(userId, encrypt(secret))
+  return { qrCode: secret.otpauth_url }
 }
 
-/**
- * Verify TOTP token during login
- */
-async verifyTOTP(userId: string, token: string): Promise<boolean> {
-  const user = await this.userService.findById(userId);
-
-  return speakeasy.totp.verify({
-    secret: user.mfaSecret,
-    encoding: 'base32',
-    token: token,
-    window: 2 // Allow 2 time steps of drift
-  });
+// Verify TOTP during login
+async verifyTOTP(userId, token) {
+  const secret = await db.getMFASecret(userId)
+  return speakeasy.totp.verify({ secret, token, window: 2 })
 }
 ```
 
@@ -133,20 +114,13 @@ async verifyTOTP(userId: string, token: string): Promise<boolean> {
 Always provide recovery codes in case primary MFA method fails:
 
 ```javascript
-/**
- * Generate backup recovery codes
- */
-generateBackupCodes(userId: string): string[] {
-  const codes = [];
-  for (let i = 0; i < 10; i++) {
-    // Generate cryptographically secure random codes
-    codes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
-  }
-
-  // Store hashed versions in database
-  await this.userService.saveBackupCodes(userId, codes);
-
-  return codes; // Show once to user
+// Generate 10 backup codes
+generateBackupCodes(userId) {
+  const codes = Array.from({ length: 10 }, () =>
+    crypto.randomBytes(4).toString('hex').toUpperCase()
+  )
+  await db.saveBackupCodes(userId, hash(codes))
+  return codes  // Show once to user
 }
 ```
 
@@ -185,22 +159,13 @@ HIPAA does not mandate specific password requirements but refers to **NIST Speci
 **Never store passwords in plain text.** Always hash with a strong algorithm:
 
 ```javascript
-import * as bcrypt from 'bcrypt';
-
-/**
- * Hash password with bcrypt
- * HIPAA Best Practice: Use bcrypt with cost factor 12+
- */
-async hashPassword(password: string): Promise<string> {
-  const saltRounds = 12; // Higher = more secure but slower
-  return await bcrypt.hash(password, saltRounds);
+// Use bcrypt with cost factor 12+
+async hashPassword(password) {
+  return bcrypt.hash(password, 12)
 }
 
-/**
- * Verify password during login
- */
-async verifyPassword(password: string, hash: string): Promise<boolean> {
-  return await bcrypt.compare(password, hash);
+async verifyPassword(password, hash) {
+  return bcrypt.compare(password, hash)
 }
 ```
 
@@ -225,44 +190,19 @@ async verifyPassword(password: string, hash: string): Promise<boolean> {
 **Password Validation Example:**
 
 ```javascript
-/**
- * Validate password meets HIPAA-aligned NIST standards
- */
-validatePassword(password: string, username: string): ValidationResult {
-  const errors = [];
+// Validate password meets NIST standards
+validatePassword(password, username) {
+  if (password.length < 12) return "Too short (min 12)"
+  if (COMMON_PASSWORDS.includes(password)) return "Too common"
+  if (password.includes(username)) return "Cannot contain username"
 
-  // Minimum length
-  if (password.length < 12) {
-    errors.push('Password must be at least 12 characters');
+  // Check complexity (3 of 4 types)
+  const types = [/[A-Z]/, /[a-z]/, /[0-9]/, /[!@#$%^&*]/]
+  if (types.filter(r => r.test(password)).length < 3) {
+    return "Need uppercase, lowercase, numbers, symbols"
   }
 
-  // Check against common passwords
-  if (COMMON_PASSWORDS.includes(password.toLowerCase())) {
-    errors.push('This password is too common');
-  }
-
-  // No username in password
-  if (password.toLowerCase().includes(username.toLowerCase())) {
-    errors.push('Password cannot contain username');
-  }
-
-  // Complexity check (optional but recommended)
-  const hasUpper = /[A-Z]/.test(password);
-  const hasLower = /[a-z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-  const complexityCount = [hasUpper, hasLower, hasNumber, hasSpecial]
-    .filter(Boolean).length;
-
-  if (complexityCount < 3) {
-    errors.push('Use mix of uppercase, lowercase, numbers, and symbols');
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors
-  };
+  return null  // Valid
 }
 ```
 

@@ -324,189 +324,107 @@ await prisma.$executeRaw`SET app.current_user_role = ${userRole}`;
 
 ## Data Deletion Requirements
 
-### CRITICAL Lesson Learned: NO SOFT DELETES for PHI!
+### CRITICAL: Medical Records CANNOT Be Deleted Prematurely
 
-**❌ HIPAA VIOLATION - Soft Delete Pattern:**
+**Legal Requirement:**
+
+Healthcare providers are **legally prohibited** from prematurely deleting medical records. Federal and state laws mandate specific retention periods to ensure:
+
+- Patient safety and continuity of care
+- Legal protection for providers
+- Compliance with HIPAA § 164.316(b)(2)
+
+**Key Facts:**
+
+1. **Patients cannot request deletion of their medical records** (unlike GDPR "right to erasure")
+2. **Federal minimum:** 6 years from creation or last use
+3. **State laws often require longer:** 7-10 years for adults, 20+ years for minors
+4. **Premature deletion is illegal** and can result in:
+   - Civil penalties up to $2M+ per violation
+   - Criminal charges (up to $250K fine + 10 years imprisonment for intentional destruction)
+   - License revocation for healthcare professionals
+   - Obstruction of justice charges if destroying litigation-related records
+
+**❌ ILLEGAL: Soft Delete Pattern**
+
+Soft deletes are **prohibited** for medical records:
 
 ```typescript
-/**
- * ❌ WRONG: Soft delete keeps PHI in database
- * This violates HIPAA disposal requirements!
- */
+// ❌ ILLEGAL: Allows premature deletion, violates retention laws
 model Patient {
-  id        String   @id @default(uuid())
-  firstName String
-  lastName  String
-  // ... other PHI fields
-
-  deletedAt DateTime?  // ❌ Soft delete flag - NOT COMPLIANT!
-  isDeleted Boolean @default(false)  // ❌ Also non-compliant!
-
-  @@map("patients")
-}
-
-async deletePatient(id: string) {
-  // ❌ WRONG: Data still exists in database
-  return await this.prisma.patient.update({
-    where: { id },
-    data: { deletedAt: new Date(), isDeleted: true }
-  });
+  deletedAt DateTime?  // NOT ALLOWED
+  isDeleted Boolean    // NOT ALLOWED
 }
 ```
 
-**Why soft deletes violate HIPAA:**
+**Why soft deletes are prohibited:**
 
-1. PHI is not "unreadable, indecipherable, or unrecoverable"
-2. Deleted data can be recovered with simple query
-3. Increases data retention beyond necessary period
-4. Creates unnecessary risk of exposure
+1. Enables premature deletion before legal retention period expires
+2. PHI not properly disposed (still recoverable)
+3. Creates compliance risk and legal liability
 
-### ✅ COMPLIANT: Hard Delete Pattern
+### ✅ LEGAL: Hard Delete After Retention Period
+
+**Only delete medical records when:**
+
+1. Legal retention period has expired (6+ years)
+2. No legal hold or active litigation
+3. State-specific retention requirements met
+4. Proper authorization and documentation
 
 ```typescript
-/**
- * ✅ CORRECT: Hard delete removes PHI permanently
- * Complies with HIPAA disposal requirements
- */
-async deletePatient(id: string, userId: string, reason: string) {
-  // 1. Verify deletion is authorized
-  await this.verifyDeletionPermission(userId);
+// ✅ LEGAL: Hard delete after retention period expires
+async deleteExpiredRecords() {
+  const retentionYears = 7 // State-specific
+  const cutoffDate = new Date()
+  cutoffDate.setFullYear(cutoffDate.getFullYear() - retentionYears)
 
-  // 2. Log BEFORE deletion (can't log after!)
-  await this.auditLog.log({
-    userId,
-    action: AuditAction.PHI_DELETE,
-    resource: 'patient',
-    resourceId: id,
-    details: {
-      reason,  // Document why (e.g., "Patient requested deletion")
-      deletedFields: ['firstName', 'lastName', 'dateOfBirth', 'ssn', 'medicalHistory'],
-      timestamp: new Date()
+  // Find records eligible for deletion
+  const expiredRecords = await prisma.patient.findMany({
+    where: {
+      createdAt: { lt: cutoffDate },
+      legalHold: false  // CRITICAL: Never delete if under legal hold
     }
-  });
+  })
 
-  // 3. HARD DELETE - removes PHI from database
-  await this.prisma.patient.delete({
-    where: { id }
-  });
+  for (const record of expiredRecords) {
+    // 1. Log before deletion
+    await auditLog.log({
+      action: "PHI_DELETE",
+      resourceId: record.id,
+      reason: "Automated retention policy - 7 years expired"
+    })
 
-  // 4. Audit log persists (contains no PHI, just record ID)
-  // This is compliant - audit logs are exempt from deletion
+    // 2. Hard delete (unrecoverable)
+    await prisma.patient.delete({ where: { id: record.id } })
+  }
 }
 ```
+
+**Important:** Audit logs must be retained for 6 years even after PHI is deleted. Logs contain NO PHI, only record IDs and metadata.
 
 ### Cascade Deletions
 
 ```prisma
-/**
- * Configure cascade deletes for related PHI
- */
+// ✅ Configure cascade deletes for related PHI
 model Patient {
-  id           String        @id @default(uuid())
-  // ... fields
-
-  // All related PHI must be deleted together
   appointments Appointment[] @relation(onDelete: Cascade)
   medications  Medication[]  @relation(onDelete: Cascade)
   labResults   LabResult[]   @relation(onDelete: Cascade)
-
-  @@map("patients")
-}
-
-model Appointment {
-  id        String  @id @default(uuid())
-  patientId String
-  // ... fields
-
-  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
-
-  @@map("appointments")
 }
 ```
 
 ### Deletion Workflow
 
+**Note:** Patients generally **cannot** request deletion of medical records. This violates record retention laws.
+
 ```typescript
-/**
- * Complete deletion workflow with safeguards
- */
-@Injectable()
-export class PatientDeletionService {
-  constructor(
-    private prisma: PrismaService,
-    private auditLog: AuditLogService,
-    private notificationService: NotificationService
-  ) {}
-
-  /**
-   * Patient-requested deletion (Right to Erasure)
-   * IMPORTANT: HIPAA does not require this, but state laws might (e.g., CCPA)
-   */
-  async requestDeletion(patientId: string, requestedBy: string) {
-    // 1. Create deletion request (for approval)
-    const request = await this.prisma.deletionRequest.create({
-      data: {
-        patientId,
-        requestedBy,
-        requestedAt: new Date(),
-        status: "PENDING",
-        reason: "Patient requested deletion",
-      },
-    });
-
-    // 2. Notify privacy officer for review
-    await this.notificationService.notifyPrivacyOfficer(request);
-
-    return request;
-  }
-
-  /**
-   * Execute approved deletion
-   */
-  async executeDeletion(requestId: string, approvedBy: string) {
-    const request = await this.prisma.deletionRequest.findUnique({
-      where: { id: requestId },
-    });
-
-    if (!request || request.status !== "APPROVED") {
-      throw new Error("Deletion request not approved");
-    }
-
-    // Begin transaction - all or nothing
-    await this.prisma.$transaction(async (tx) => {
-      // 1. Audit log BEFORE deletion
-      await this.auditLog.log({
-        userId: approvedBy,
-        action: AuditAction.PHI_DELETE,
-        resource: "patient",
-        resourceId: request.patientId,
-        details: {
-          requestId,
-          reason: request.reason,
-          approvedBy,
-        },
-      });
-
-      // 2. Hard delete patient and all related PHI
-      // Cascade deletes appointments, medications, lab results, etc.
-      await tx.patient.delete({
-        where: { id: request.patientId },
-      });
-
-      // 3. Mark deletion request as completed
-      await tx.deletionRequest.update({
-        where: { id: requestId },
-        data: {
-          status: "COMPLETED",
-          completedAt: new Date(),
-          completedBy: approvedBy,
-        },
-      });
-    });
-
-    // 4. Notify requester
-    await this.notificationService.notifyDeletionComplete(request);
-  }
+// Automated deletion after retention period
+async deleteExpiredRecords() {
+  // 1. Find eligible records (retention period expired, no legal hold)
+  // 2. Audit log BEFORE deletion
+  // 3. Hard delete with transaction (all or nothing)
+  // 4. Cascade deletes related PHI automatically
 }
 ```
 
